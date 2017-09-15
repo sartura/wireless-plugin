@@ -410,6 +410,14 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
+	pid_t pid=fork();
+	if (pid==0) {
+		execl("/etc/init.d/network", "network", "restart", (char *) NULL);
+		exit(127);
+	} else {
+		waitpid(pid, 0, 0);
+	}
+
 cleanup:
     sr_free_change_iter(it);
 
