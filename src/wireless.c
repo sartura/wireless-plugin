@@ -374,21 +374,21 @@ static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
 {
     struct plugin_ctx *pctx = (struct plugin_ctx*) private_ctx;
-
-    if (SR_EV_APPLY == event) {
-        INF("\n\n ========== CONFIG HAS CHANGED, CURRENT RUNNING CONFIG: %s ==========\n\n", module_name);
-        /* print_current_config(session, module_name); */
-    } else {
-        INF("Some insignificant event %d", event);
-        return SR_ERR_OK;
-    }
-
     sr_change_iter_t *it = NULL;
     int rc = SR_ERR_OK;
     sr_change_oper_t oper;
     sr_val_t *old_value = NULL;
     sr_val_t *new_value = NULL;
     char change_path[MAX_XPATH] = {0,};
+
+    if (SR_EV_APPLY == event) {
+        rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
+        INF("\n\n ========== CONFIG HAS CHANGED, CURRENT RUNNING CONFIG: %s ==========\n\n", module_name);
+        /* print_current_config(session, module_name); */
+    } else {
+        INF("Some insignificant event %d", event);
+        return SR_ERR_OK;
+    }
 
     snprintf(change_path, MAX_XPATH, "/%s:*", module_name);
 
@@ -542,14 +542,23 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     *private_ctx = ctx;
     ctx->subscription = subscription;
 
+    INF_MSG("Connecting to sysrepo ...");
+    rc = sr_connect(YANG_MODEL, SR_CONN_DEFAULT, &ctx->startup_connection);
+    SR_CHECK_RET(rc, error, "Error by sr_connect: %s", sr_strerror(rc));
+
+
+    rc = sr_session_start(ctx->startup_connection, SR_DS_STARTUP, SR_SESS_DEFAULT, &ctx->startup_session);
+    SR_CHECK_RET(rc, error, "Error by sr_session_start: %s", sr_strerror(rc));
+
+    /* Init wireless. */
+    rc = init_wireless(ctx, ctx->startup_session);
+    SR_CHECK_RET(rc, error, "Couldn't initialize wirelessx: %s", sr_strerror(rc));
+
+
     INF_MSG("sr_plugin_init_cb for wireless");
     rc = sr_module_change_subscribe(session, "wireless", wireless_change_cb, *private_ctx,
                                     0, SR_SUBSCR_DEFAULT, &subscription);
     SR_CHECK_RET(rc, error, "initialization error: %s", sr_strerror(rc));
-
-    /* Init wireless. */
-    rc = init_wireless(ctx, session);
-    SR_CHECK_RET(rc, error, "Couldn't initialize wirelessx: %s", sr_strerror(rc));
 
     SRP_LOG_DBG_MSG("Plugin initialized successfully");
     INF_MSG("sr_plugin_init_cb for sysrepo-plugin-dt-terastream finished.");
