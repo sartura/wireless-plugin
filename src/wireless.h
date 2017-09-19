@@ -7,6 +7,7 @@
 
 #define MAX_UCI_PATH 64
 #define MAX_XPATH 256
+#define XPATH_MAX_LEN 256
 
 #define ARR_SIZE(a) sizeof a / sizeof a[0]
 
