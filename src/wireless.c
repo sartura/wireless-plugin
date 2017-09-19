@@ -420,6 +420,8 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
 
   cleanup:
+    if (old_value) sr_free_val(old_value);
+    if (new_value) sr_free_val(new_value);
     sr_free_change_iter(it);
 
     return SR_ERR_OK;
@@ -536,7 +538,6 @@ int sync_datastores(struct plugin_ctx *ctx)
     if (stat(startup_file, &st) != 0) {
         ERR("Could not open sysrepo file %s", startup_file);
         return SR_ERR_INTERNAL;
-
     }
 
     if (0 == st.st_size) {
