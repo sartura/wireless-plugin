@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-
 #include "wireless.h"
 #include "common.h"
 
@@ -616,6 +615,15 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
 
     struct plugin_ctx *ctx = private_ctx;
     sr_unsubscribe(session, ctx->subscription);
+    if (NULL != ctx->startup_session) {
+        sr_session_stop(ctx->startup_session);
+    }
+    if (NULL != ctx->startup_connection) {
+        sr_disconnect(ctx->startup_connection);
+    }
+    if (NULL != ctx->uctx) {
+        uci_free_context(ctx->uctx);
+    }
     free(ctx);
 
     SRP_LOG_DBG_MSG("Plugin cleaned-up successfully");
