@@ -361,9 +361,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     if (SR_EV_APPLY == event) {
         rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
-        INF("\n\n ========== CONFIG HAS CHANGED, CURRENT RUNNING CONFIG: %s ==========\n\n", module_name);
-    } else {
-        return SR_ERR_OK;
+        INF("\n\n ========== CONFIG HAS CHANGED: %s ==========\n\n", module_name);
     }
 
     snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name);
@@ -386,17 +384,15 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
-    pid_t pid = fork();
-    if (pid==0) {
-        execl("/etc/init.d/network", "network", "restart", (char *) NULL);
-        exit(127);
-    } else {
-        waitpid(pid, 0, 0);
-    }
+    /* pid_t pid = fork(); */
+    /* if (pid==0) { */
+    /*     execl("/etc/init.d/network", "network", "restart", (char *) NULL); */
+    /*     exit(127); */
+    /* } else { */
+    /*     waitpid(pid, 0, 0); */
+    /* } */
 
   cleanup:
-    if (old_value) sr_free_val(old_value);
-    if (new_value) sr_free_val(new_value);
     sr_free_change_iter(it);
 
     return SR_ERR_OK;
