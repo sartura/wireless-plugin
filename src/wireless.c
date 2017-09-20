@@ -16,6 +16,17 @@ typedef struct sr_uci_mapping {
     char *xpath;
 } sr_uci_link;
 
+struct wireless_device {
+  char *name;
+  char *option;
+};
+
+struct wireless_interface {
+  int32_t index;
+  char *option;
+};
+
+
 const char *index_fmt = "/wireless:devices/device[name='%s']/interface[ssid='%s']/index";
 
 static sr_uci_link table_wireless[] = {
@@ -65,9 +76,6 @@ static sr_uci_link table_wireless[] = {
 
 };
 
-/* Update UCI configuration from Sysrepo datastore. */
-static int config_store_to_uci(struct plugin_ctx *pctx, sr_session_ctx_t *sess, sr_val_t *value);
-
 /* Update UCI configuration given ucipath and some string value. */
 static int set_uci_item(struct uci_context *uctx, char *ucipath, char *value);
 
@@ -77,39 +85,42 @@ static int get_uci_item(struct uci_context *uctx, char *ucipath, char **value);
 static bool
 val_has_data(sr_type_t type) {
     /* types containing some data */
-    if (type == SR_BINARY_T) return true;
-    else if (type == SR_BITS_T) return true;
-    else if (type == SR_BOOL_T) return true;
-    else if (type == SR_DECIMAL64_T) return true;
-    else if (type == SR_ENUM_T) return true;
-    else if (type == SR_IDENTITYREF_T) return true;
-    else if (type == SR_INSTANCEID_T) return true;
-    else if (type == SR_INT8_T) return true;
-    else if (type == SR_INT16_T) return true;
-    else if (type == SR_INT32_T) return true;
-    else if (type == SR_INT64_T) return true;
-    else if (type == SR_STRING_T) return true;
-    else if (type == SR_UINT8_T) return true;
-    else if (type == SR_UINT16_T) return true;
-    else if (type == SR_UINT32_T) return true;
-    else if (type == SR_UINT64_T) return true;
-    else if (type == SR_ANYXML_T) return true;
-    else if (type == SR_ANYDATA_T) return true;
-    else return false;
+    switch(type) {
+    case SR_BINARY_T:
+    case SR_BITS_T:
+    case SR_BOOL_T:
+    case SR_DECIMAL64_T:
+    case SR_ENUM_T:
+    case SR_IDENTITYREF_T:
+    case SR_INSTANCEID_T:
+    case SR_INT8_T:
+    case SR_INT16_T:
+    case SR_INT32_T:
+    case SR_INT64_T:
+    case SR_STRING_T:
+    case SR_UINT8_T:
+    case SR_UINT16_T:
+    case SR_UINT32_T:
+    case SR_UINT64_T:
+    case SR_ANYXML_T:
+    case SR_ANYDATA_T:
+        return true;
+    default: return false;
+    }
 }
 
 static char *
-get_key_value_second(char *orig_xpath)
+get_key_value_second(char *orig_xpath, int n)
 {
     char *key = NULL, *node = NULL, *xpath = NULL, *val = NULL;
     sr_xpath_ctx_t state = {0,0,0,0};
 
     xpath = strdup(orig_xpath);
 
-    char *cur = strstr(xpath, "ssid");
-    if (!cur) {
-        return NULL;
-    }
+    /* char *cur = strstr(xpath, "ssid"); */
+    /* if (!cur) { */
+    /*     return NULL; */
+    /* } */
 
     node = sr_xpath_next_node(xpath, &state);
     if (NULL == node) {
@@ -120,7 +131,7 @@ get_key_value_second(char *orig_xpath)
         key = sr_xpath_next_key_name(NULL, &state);
         if (NULL != key) {
             val = sr_xpath_next_key_value(NULL, &state);
-            if (++counter == 2) break;
+            if (counter++ == n) break;
             /* break; */
         }
         node = sr_xpath_next_node(NULL, &state);
@@ -128,7 +139,6 @@ get_key_value_second(char *orig_xpath)
             break;
         }
     }
-
 
   error:
     if (NULL != xpath) {
@@ -217,40 +227,7 @@ set_uci_item(struct uci_context *uctx, char *ucipath, char *value)
     return rc;
 }
 
-static int
-config_xpath_to_ucipath(struct plugin_ctx *pctx, sr_session_ctx_t *sess, sr_uci_link *mapping, sr_val_t *value)
-{
-    char *val_str;
-    char ucipath[MAX_UCI_PATH] ;
-    char xpath[XPATH_MAX_LEN];
-    int rc = SR_ERR_OK;
-    char *device_name = get_key_value(value->xpath);
-
-    sprintf(xpath, mapping->xpath, device_name);
-
-    val_str = SR_ERR_NOT_FOUND == rc ? mapping->default_value : sr_val_to_str(value);
-    if (NULL == val_str) {
-        goto exit;
-    }
-
-    sprintf(ucipath, mapping->ucipath, device_name);
-    rc = set_uci_item(pctx->uctx, ucipath, val_str);
-    UCI_CHECK_RET(rc, exit, "sr_get_item %s", sr_strerror(rc));
-
-  exit:
-    return rc;
-}
-
 #define WIRELESS_DEVICE_NAME_LENGTH 20
-
-struct wireless_device {
-    char *name, *option;
-};
-
-struct wireless_interface {
-    int32_t index;
-    char *option;
-};
 
 static int
 wireless_xpath_to_device(char *orig_xpath, struct wireless_device *dev) {
@@ -295,7 +272,7 @@ wireless_xpath_to_interface(sr_session_ctx_t *session, char *xpath, struct wirel
     sr_xpath_ctx_t state = {0,0,0,0};
 
     name_key = get_key_value(xpath);
-    ssid_key = get_key_value_second(xpath);
+    ssid_key = get_key_value_second(xpath, 1);
 
     char index_xpath[XPATH_MAX_LEN];
     sprintf(index_xpath, index_fmt, name_key, ssid_key);
@@ -385,9 +362,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     if (SR_EV_APPLY == event) {
         rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
         INF("\n\n ========== CONFIG HAS CHANGED, CURRENT RUNNING CONFIG: %s ==========\n\n", module_name);
-        /* print_current_config(session, module_name); */
     } else {
-        INF("Some insignificant event %d", event);
         return SR_ERR_OK;
     }
 
@@ -411,7 +386,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
-    pid_t pid=fork();
+    pid_t pid = fork();
     if (pid==0) {
         execl("/etc/init.d/network", "network", "restart", (char *) NULL);
         exit(127);
