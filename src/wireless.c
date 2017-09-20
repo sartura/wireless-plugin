@@ -26,7 +26,6 @@ struct wireless_interface {
   char *option;
 };
 
-
 const char *index_fmt = "/wireless:devices/device[name='%s']/interface[ssid='%s']/index";
 
 static sr_uci_link table_wireless[] = {
@@ -110,18 +109,12 @@ val_has_data(sr_type_t type) {
 }
 
 static char *
-get_key_value_second(char *orig_xpath, int n)
+get_key_value(char *orig_xpath, int n)
 {
     char *key = NULL, *node = NULL, *xpath = NULL, *val = NULL;
     sr_xpath_ctx_t state = {0,0,0,0};
 
     xpath = strdup(orig_xpath);
-
-    /* char *cur = strstr(xpath, "ssid"); */
-    /* if (!cur) { */
-    /*     return NULL; */
-    /* } */
-
     node = sr_xpath_next_node(xpath, &state);
     if (NULL == node) {
         goto error;
@@ -146,38 +139,6 @@ get_key_value_second(char *orig_xpath, int n)
     }
     return key ? strdup(val) : NULL;
 }
-
-static char *
-get_key_value(char *orig_xpath)
-{
-    char *key = NULL, *node = NULL, *xpath = NULL;
-    sr_xpath_ctx_t state = {0,0,0,0};
-
-    xpath = strdup(orig_xpath);
-
-    node = sr_xpath_next_node(xpath, &state);
-    if (NULL == node) {
-        goto error;
-    }
-    while(true) {
-        key = sr_xpath_next_key_name(NULL, &state);
-        if (NULL != key) {
-            key = sr_xpath_next_key_value(NULL, &state);
-            break;
-        }
-        node = sr_xpath_next_node(NULL, &state);
-        if (NULL == node) {
-            break;
-        }
-    }
-
-  error:
-    if (NULL != xpath) {
-        free(xpath);
-    }
-    return key ? strdup(key) : NULL;
-}
-
 
 static int
 get_uci_item(struct uci_context *uctx, char *ucipath, char **value)
@@ -271,8 +232,8 @@ wireless_xpath_to_interface(sr_session_ctx_t *session, char *xpath, struct wirel
     char *name_key = NULL, *ssid_key = NULL;
     sr_xpath_ctx_t state = {0,0,0,0};
 
-    name_key = get_key_value(xpath);
-    ssid_key = get_key_value_second(xpath, 1);
+    name_key = get_key_value(xpath, 0);
+    ssid_key = get_key_value(xpath, 1);
 
     char index_xpath[XPATH_MAX_LEN];
     sprintf(index_xpath, index_fmt, name_key, ssid_key);
@@ -324,7 +285,6 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
 
     if (strstr(new_val->xpath, "device")) {
         /* handle device  */
-        /* key = get_key_value(new_val->xpath) */;
         struct wireless_device dev = { 0, 0, };
         rc = wireless_xpath_to_device(new_val->xpath, &dev);
         if (rc < 0) {
@@ -384,13 +344,13 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
-    /* pid_t pid = fork(); */
-    /* if (pid==0) { */
-    /*     execl("/etc/init.d/network", "network", "restart", (char *) NULL); */
-    /*     exit(127); */
-    /* } else { */
-    /*     waitpid(pid, 0, 0); */
-    /* } */
+    pid_t pid = fork();
+    if (pid==0) {
+        execl("/etc/init.d/network", "network", "restart", (char *) NULL);
+        exit(127);
+    } else {
+        waitpid(pid, 0, 0);
+    }
 
   cleanup:
     sr_free_change_iter(it);
