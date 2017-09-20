@@ -3,7 +3,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+
 #include "wireless.h"
+#include "operational.h"
 #include "common.h"
 
 const char *YANG_MODEL = "wireless";
@@ -73,6 +75,10 @@ static sr_uci_link table_wireless[] = {
     { 0, SR_STRING_T, "wireless.@wifi-iface[%d].bss_max" , "/wireless:devices/device[name='%s']/interface[ssid='%s']/bss_max"},
     { 0, SR_STRING_T, "wireless.@wifi-iface[%d].ifname", "/wireless:devices/device[name='%s']/interface[ssid='%s']/ifname"},
 
+};
+
+static oper_mapping table_operational[] = {
+    { "ssid", operational_ssid },
 };
 
 /* Update UCI configuration given ucipath and some string value. */
@@ -487,8 +493,126 @@ int sync_datastores(struct plugin_ctx *ctx)
 
   error:
     return rc;
-
 }
+
+static size_t
+list_size(struct list_head *list)
+{
+    size_t current_size = 0;
+    struct value_node *vn;
+
+    list_for_each_entry(vn, list, head) {
+        current_size += 1;
+    }
+
+    return current_size;
+}
+
+int
+sr_dup_val_data(sr_val_t *dest, const sr_val_t *source)
+{
+    int rc = SR_ERR_OK;
+
+    switch (source->type) {
+        case SR_BINARY_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.binary_val);
+            break;
+        case SR_BITS_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.bits_val);
+            break;
+        case SR_ENUM_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.enum_val);
+            break;
+        case SR_IDENTITYREF_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.identityref_val);
+            break;
+        case SR_INSTANCEID_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.instanceid_val);
+            break;
+        case SR_STRING_T:
+            rc = sr_val_set_str_data(dest, source->type, source->data.string_val);
+            break;
+        case SR_BOOL_T:
+        case SR_DECIMAL64_T:
+        case SR_INT8_T:
+        case SR_INT16_T:
+        case SR_INT32_T:
+        case SR_INT64_T:
+        case SR_UINT8_T:
+        case SR_UINT16_T:
+        case SR_UINT32_T:
+        case SR_UINT64_T:
+        case SR_TREE_ITERATOR_T:
+            dest->data = source->data;
+            dest->type = source->type;
+            break;
+        default:
+            dest->type = source->type;
+            break;
+    }
+
+    sr_val_set_xpath(dest, source->xpath);
+    return rc;
+}
+
+
+static int
+wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
+{
+    char *node;
+    struct plugin_ctx *pctx = (struct plugin_ctx *) private_ctx;
+    (void) pctx;
+    size_t n_mappings;
+    int rc = SR_ERR_OK;
+
+    INF("%s", cb_xpath);
+    struct list_head list = LIST_HEAD_INIT(list);
+    if (sr_xpath_node_name_eq(cb_xpath, "interface")) {
+        operational_start();
+        oper_func func;
+        n_mappings = ARR_SIZE(table_operational);
+
+        for (size_t i = 0; i < n_mappings; i++) {
+            node = table_operational[i].node;
+            func = table_operational[i].op_func;
+            INF("\tDiagnostics for: %s", node);
+            rc = func("wl0", &list);
+        }
+
+        size_t cnt = 0;
+        cnt = list_size(&list);
+        INF("Allocating %zu values.", cnt);
+
+        struct value_node *vn;
+        size_t j = 0;
+        rc = sr_new_values(cnt, values);
+        SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
+
+        list_for_each_entry(vn, &list, head) {
+            /* sr_print_val(vn->value); */
+            rc = sr_dup_val_data(&(*values)[j], vn->value);
+            /* INF("%zu: %s", j, sr_strerror(rc)); */
+            j += 1;
+            sr_free_val(vn->value);
+        }
+
+
+        *values_cnt = cnt;
+
+        list_del(&list);
+    }
+
+    if (*values_cnt > 0) {
+        INF("Debug sysrepo values printout: %zu", *values_cnt);
+        for (size_t i = 0; i < *values_cnt; i++){
+            sr_print_val(&(*values)[i]);
+        }
+    }
+
+  exit:
+    return rc;
+}
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
@@ -526,6 +650,12 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     rc = sr_module_change_subscribe(session, "wireless", wireless_change_cb, *private_ctx,
                                     0, SR_SUBSCR_DEFAULT, &subscription);
     SR_CHECK_RET(rc, error, "initialization error: %s", sr_strerror(rc));
+
+    /* Operational data handling. */
+    INF_MSG("Subscribing to operational");
+    rc = sr_dp_get_items_subscribe(session, "/wireless:devices-state", wireless_operational_cb, *private_ctx,
+                                   SR_SUBSCR_DEFAULT, &subscription);
+    SR_CHECK_RET(rc, error, "Error by sr_dp_get_items_subscribe: %s", sr_strerror(rc));
 
     SRP_LOG_DBG_MSG("Plugin initialized successfully");
     INF_MSG("sr_plugin_init_cb for sysrepo-plugin-dt-terastream finished.");
