@@ -683,6 +683,7 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
     if (NULL != ctx->uctx) {
         uci_free_context(ctx->uctx);
     }
+    operational_stop();
     free(ctx);
 
     SRP_LOG_DBG_MSG("Plugin cleaned-up successfully");
