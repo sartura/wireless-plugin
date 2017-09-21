@@ -27,4 +27,7 @@ typedef struct oper_mapping {
 int operational_start();
 void operational_stop();
 
+int operational_channel(char *, struct list_head *);
 int operational_ssid(char *, struct list_head *);
+int operational_encryption(char *, struct list_head *);
+

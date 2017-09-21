@@ -243,10 +243,12 @@ module wireless {
       }
     }
     container "devices-state" {
+
+      config false;
+
       description
         "Wireless devices.";
 
-      config false;
       
       list device {
 
@@ -260,23 +262,15 @@ module wireless {
           type string;
         }
 
-        list interface {
-            key "ssid";
+        leaf ssid {
+          type string;
+        }
 
-            description
-              "List of configured interfaces on device";
+        leaf encryption {
+          type string;
+          default "psk2";
+        }
 
-            leaf ssid {
-                 type string;
-                 default "PANTERA-7858";
-            }
-
-            leaf encryption {
-                 type string;
-                 default "psk2";
-            }
-
-          }
       }
     }
 }

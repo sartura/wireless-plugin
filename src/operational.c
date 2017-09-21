@@ -102,7 +102,7 @@ ubus_base(const char *ubus_lookup_path,
 }
 
 static void
-operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *list)
+operstatus_channel_f(json_object *base, char *interface_name, struct list_head *list)
 {
     struct json_object *t;
     const char *ubus_result;
@@ -117,12 +117,93 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     ubus_result = json_object_to_json_string(t);
     if (!ubus_result) return;
 
-    sr_val_set_str_data(list_value->value, SR_ENUM_T, ubus_result);
 
     char xpath[MAX_XPATH];
-    char *fmt = "/wireless:devices-state/device[name='wl0']/channel";
     /* sprintf(xpath, fmt, interface_name); */
+    char *fmt = "/wireless:devices-state/device[name='wl0']/channel";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
+    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+
+
+    list_add(&list_value->head, list);
+}
+
+int
+operational_channel(char *interface_name, struct list_head *list)
+{
+    struct status_container *msg = NULL;
+    make_status_container(&msg, "status", operstatus_channel_f, interface_name, list);
+    struct blob_buf buf = {0,};
+    blob_buf_init(&buf, 0);
+    blobmsg_add_string(&buf, "vif", "wl0");
+    ubus_base("router.wireless", msg, &buf);
+
+    return SR_ERR_OK;
+}
+
+static void
+operstatus_encryption_f(json_object *base, char *interface_name, struct list_head *list)
+{
+    struct json_object *t;
+    const char *ubus_result;
+    struct value_node *list_value;
+
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
+
+    json_object_object_get_ex(base,
+                              "encryption",
+                              &t);
+    ubus_result = json_object_to_json_string(t);
+    if (!ubus_result) return;
+
+
+    char xpath[MAX_XPATH];
+    /* sprintf(xpath, fmt, interface_name); */
+    char *fmt = "/wireless:devices-state/device[name='wl0']/encryption";
+    sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
+    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+
+
+    list_add(&list_value->head, list);
+}
+
+int
+operational_encryption(char *interface_name, struct list_head *list)
+{
+    struct status_container *msg = NULL;
+    make_status_container(&msg, "status", operstatus_encryption_f, interface_name, list);
+    struct blob_buf buf = {0,};
+    blob_buf_init(&buf, 0);
+    blobmsg_add_string(&buf, "vif", "wl0");
+    ubus_base("router.wireless", msg, &buf);
+
+    return SR_ERR_OK;
+}
+
+static void
+operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *list)
+{
+    struct json_object *t;
+    const char *ubus_result;
+    struct value_node *list_value;
+
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
+
+    json_object_object_get_ex(base,
+                              "ssid",
+                              &t);
+    ubus_result = json_object_to_json_string(t);
+    if (!ubus_result) return;
+
+
+    char xpath[MAX_XPATH];
+    /* sprintf(xpath, fmt, interface_name); */
+    char *fmt = "/wireless:devices-state/device[name='wl0']/ssid";
+    sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
+    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+
 
     list_add(&list_value->head, list);
 }

@@ -19,13 +19,13 @@ typedef struct sr_uci_mapping {
 } sr_uci_link;
 
 struct wireless_device {
-  char *name;
-  char *option;
+    char *name;
+    char *option;
 };
 
 struct wireless_interface {
-  int32_t index;
-  char *option;
+    int32_t index;
+    char *option;
 };
 
 const char *index_fmt = "/wireless:devices/device[name='%s']/interface[ssid='%s']/index";
@@ -78,7 +78,9 @@ static sr_uci_link table_wireless[] = {
 };
 
 static oper_mapping table_operational[] = {
+    { "channel", operational_channel },
     { "ssid", operational_ssid },
+    { "encryption", operational_encryption },
 };
 
 /* Update UCI configuration given ucipath and some string value. */
@@ -514,41 +516,41 @@ sr_dup_val_data(sr_val_t *dest, const sr_val_t *source)
     int rc = SR_ERR_OK;
 
     switch (source->type) {
-        case SR_BINARY_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.binary_val);
-            break;
-        case SR_BITS_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.bits_val);
-            break;
-        case SR_ENUM_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.enum_val);
-            break;
-        case SR_IDENTITYREF_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.identityref_val);
-            break;
-        case SR_INSTANCEID_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.instanceid_val);
-            break;
-        case SR_STRING_T:
-            rc = sr_val_set_str_data(dest, source->type, source->data.string_val);
-            break;
-        case SR_BOOL_T:
-        case SR_DECIMAL64_T:
-        case SR_INT8_T:
-        case SR_INT16_T:
-        case SR_INT32_T:
-        case SR_INT64_T:
-        case SR_UINT8_T:
-        case SR_UINT16_T:
-        case SR_UINT32_T:
-        case SR_UINT64_T:
-        case SR_TREE_ITERATOR_T:
-            dest->data = source->data;
-            dest->type = source->type;
-            break;
-        default:
-            dest->type = source->type;
-            break;
+    case SR_BINARY_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.binary_val);
+        break;
+    case SR_BITS_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.bits_val);
+        break;
+    case SR_ENUM_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.enum_val);
+        break;
+    case SR_IDENTITYREF_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.identityref_val);
+        break;
+    case SR_INSTANCEID_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.instanceid_val);
+        break;
+    case SR_STRING_T:
+        rc = sr_val_set_str_data(dest, source->type, source->data.string_val);
+        break;
+    case SR_BOOL_T:
+    case SR_DECIMAL64_T:
+    case SR_INT8_T:
+    case SR_INT16_T:
+    case SR_INT32_T:
+    case SR_INT64_T:
+    case SR_UINT8_T:
+    case SR_UINT16_T:
+    case SR_UINT32_T:
+    case SR_UINT64_T:
+    case SR_TREE_ITERATOR_T:
+        dest->data = source->data;
+        dest->type = source->type;
+        break;
+    default:
+        dest->type = source->type;
+        break;
     }
 
     sr_val_set_xpath(dest, source->xpath);
@@ -567,41 +569,38 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
 
     INF("%s", cb_xpath);
     struct list_head list = LIST_HEAD_INIT(list);
-        operational_start();
-        oper_func func;
-        n_mappings = ARR_SIZE(table_operational);
+    operational_start();
+    oper_func func;
+    n_mappings = ARR_SIZE(table_operational);
 
-        for (size_t i = 0; i < n_mappings; i++) {
-            node = table_operational[i].node;
-            func = table_operational[i].op_func;
-            INF("\tDiagnostics for: %s", node);
-            rc = func("wl0", &list);
-        }
+    for (size_t i = 0; i < n_mappings; i++) {
+        node = table_operational[i].node;
+        func = table_operational[i].op_func;
+        INF("\tDiagnostics for: %s", node);
+        rc = func("wl0", &list);
+    }
 
-        size_t cnt = 0;
-        cnt = list_size(&list);
-        INF("Allocating %zu values.", cnt);
+    size_t cnt = 0;
+    cnt = list_size(&list);
+    INF("Allocating %zu values.", cnt);
 
-        struct value_node *vn;
-        size_t j = 0;
-        rc = sr_new_values(cnt, values);
-        SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
+    struct value_node *vn;
+    size_t j = 0;
+    rc = sr_new_values(cnt, values);
+    SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
 
-        list_for_each_entry(vn, &list, head) {
-            /* sr_print_val(vn->value); */
-            rc = sr_dup_val_data(&(*values)[j], vn->value);
-            /* INF("%zu: %s", j, sr_strerror(rc)); */
-            j += 1;
-            sr_free_val(vn->value);
-        }
+    list_for_each_entry(vn, &list, head) {
+        rc = sr_dup_val_data(&(*values)[j], vn->value);
+        j += 1;
+        sr_free_val(vn->value);
+    }
 
+    *values_cnt = cnt;
 
-        *values_cnt = cnt;
-
-        list_del(&list);
+    list_del(&list);
 
     if (*values_cnt > 0) {
-        INF("Debug sysrepo values printout: %zu", *values_cnt);
+        INF("[%d - %s]Debug sysrepo values printout: %zu", rc, sr_strerror(rc), *values_cnt);
         for (size_t i = 0; i < *values_cnt; i++){
             sr_print_val(&(*values)[i]);
         }
