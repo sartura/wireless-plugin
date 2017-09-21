@@ -256,6 +256,9 @@ module wireless {
           type string;
         }
 
+        leaf channel {
+          type string;
+        }
 
         list interface {
             key "ssid";
@@ -273,10 +276,6 @@ module wireless {
                  default "psk2";
             }
 
-            leaf channel {
-                 type string;
-                 default "auto";
-            }
           }
       }
     }

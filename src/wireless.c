@@ -567,7 +567,6 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
 
     INF("%s", cb_xpath);
     struct list_head list = LIST_HEAD_INIT(list);
-    if (sr_xpath_node_name_eq(cb_xpath, "interface")) {
         operational_start();
         oper_func func;
         n_mappings = ARR_SIZE(table_operational);
@@ -600,7 +599,6 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
         *values_cnt = cnt;
 
         list_del(&list);
-    }
 
     if (*values_cnt > 0) {
         INF("Debug sysrepo values printout: %zu", *values_cnt);

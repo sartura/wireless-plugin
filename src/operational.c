@@ -76,7 +76,7 @@ ubus_base_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 
 static int
 ubus_base(const char *ubus_lookup_path,
-          struct status_container *msg)
+          struct status_container *msg, struct blob_buf *blob)
 {
     /* INF("list null %d", msg->list==NULL); */
     uint32_t id = 0;
@@ -88,16 +88,14 @@ ubus_base(const char *ubus_lookup_path,
         goto exit;
     }
 
-    struct blob_buf buf = {0,};
-    blob_buf_init(&buf, 0);
-    rc = ubus_invoke(ctx, id, msg->ubus_method, buf.head, ubus_base_cb, (void *) msg, 2000);
+    rc = ubus_invoke(ctx, id, "status", blob->head, ubus_base_cb, (void *) msg, 2000);
     if (rc) {
         INF("ubus [%s]: no object %s\n", ubus_strerror(rc), msg->ubus_method);
         goto exit;
     }
 
   exit:
-    /* blob_buf_free(&buf); */
+    blob_buf_free(blob);
 
     return rc;
 
@@ -109,20 +107,20 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     struct json_object *t;
     const char *ubus_result;
     struct value_node *list_value;
-    INF_MSG("");
+
     list_value = calloc(1, sizeof *list_value);
     sr_new_values(1, &list_value->value);
 
-    /* json_object_object_get_ex(base, */
-    /*                           "up", */
-    /*                           &t); */
-    /* ubus_result = json_object_to_json_string(t); */
-    /* if (ubus_result) INF("%s", ubus_result); */
+    json_object_object_get_ex(base,
+                              "channel",
+                              &t);
+    ubus_result = json_object_to_json_string(t);
+    if (!ubus_result) return;
 
-    sr_val_set_str_data(list_value->value, SR_ENUM_T, "auto");
+    sr_val_set_str_data(list_value->value, SR_ENUM_T, ubus_result);
 
     char xpath[MAX_XPATH];
-    char *fmt = "/wireless:devices-state/device[name='wl0']/interface[ssid='PANTERA-7858']/channel";
+    char *fmt = "/wireless:devices-state/device[name='wl0']/channel";
     /* sprintf(xpath, fmt, interface_name); */
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
 
@@ -134,7 +132,10 @@ operational_ssid(char *interface_name, struct list_head *list)
 {
     struct status_container *msg = NULL;
     make_status_container(&msg, "status", operstatus_ssid_f, interface_name, list);
-    ubus_base("router.wireless", msg);
+    struct blob_buf buf = {0,};
+    blob_buf_init(&buf, 0);
+    blobmsg_add_string(&buf, "vif", "wl0");
+    ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
 }
