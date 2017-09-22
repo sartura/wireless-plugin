@@ -81,7 +81,7 @@ static oper_mapping table_operational[] = {
     { "channel", operational_channel },
     { "ssid", operational_ssid },
     { "encryption", operational_encryption },
-    /* { "up", operational_up }, */
+    { "up", operational_up },
 };
 
 /* Update UCI configuration given ucipath and some string value. */
