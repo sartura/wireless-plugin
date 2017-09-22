@@ -625,6 +625,8 @@ get_uci_wireless_devices(struct plugin_ctx *pctx)
     struct uci_package *package = NULL;
     int rc;
 
+    INF("Getting uci devices for %s", uci_package_name);
+
     rc = uci_load(pctx->uctx, uci_package_name, &package);
     UCI_CHECK_RET(rc, exit, "[%d] Could not load package %s.", rc, uci_package_name);
 
@@ -633,8 +635,9 @@ get_uci_wireless_devices(struct plugin_ctx *pctx)
         char *type = s->type;
         char *name = s->e.name;
 
-        if (strcmp("interface", type) == 0) {
+        if (strcmp("wifi-device", type) == 0) {
             strcpy(pctx->interface_names[pctx->interface_count++], name);
+            INF("%s %s %s", type, name, pctx->interface_names[pctx->interface_count-1]);
         }
     }
 
