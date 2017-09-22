@@ -581,7 +581,9 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
         node = table_operational[i].node;
         func = table_operational[i].op_func;
         INF("\tDiagnostics for: %s", node);
-        rc = func("wl0", &list);
+        for (size_t j = 0; j < pctx->interface_count; j++) {
+            rc = func(pctx->interface_names[j], &list);
+        }
     }
 
     size_t cnt = 0;
@@ -664,6 +666,10 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
     rc = get_uci_wireless_devices(ctx);
     UCI_CHECK_RET(rc, error, "[%d] Could not get list of wireless devices from UCI.", rc);
+
+    for (size_t i = 0; i < ctx->interface_count; i++) {
+        INF("%s", ctx->interface_names[i]);
+    }
 
     INF_MSG("Connecting to sysrepo ...");
     rc = sr_connect(YANG_MODEL, SR_CONN_DEFAULT, &ctx->startup_connection);
