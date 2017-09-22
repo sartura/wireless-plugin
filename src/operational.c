@@ -12,6 +12,17 @@ struct status_container {
 struct ubus_context *ctx;
 struct status_container *container_msg;
 
+static char *
+remove_quotes(const char *str)
+{
+  char *unquoted;
+  unquoted = strdup(str);
+  unquoted = unquoted + 1;
+  unquoted[strlen(unquoted) - 1] = '\0';
+
+  return strdup(unquoted);
+}
+
 int
 operational_start()
 {
@@ -162,7 +173,7 @@ operstatus_encryption_f(json_object *base, char *interface_name, struct list_hea
     /* sprintf(xpath, fmt, interface_name); */
     char *fmt = "/wireless:devices-state/device[name='wl1']/encryption";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
-    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+    sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
 
 
     list_add(&list_value->head, list);
@@ -202,7 +213,7 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     /* sprintf(xpath, fmt, interface_name); */
     char *fmt = "/wireless:devices-state/device[name='wl1']/ssid";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
-    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+    sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
 
 
     list_add(&list_value->head, list);
