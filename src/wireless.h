@@ -8,6 +8,8 @@
 #define MAX_UCI_PATH 64
 #define MAX_XPATH 256
 #define XPATH_MAX_LEN 256
+#define MAX_INTERFACES 10
+#define MAX_INTERFACE_NAME 20
 
 #define ARR_SIZE(a) sizeof a / sizeof a[0]
 
@@ -17,16 +19,6 @@ struct plugin_ctx {
   sr_subscription_ctx_t *subscription;
   sr_conn_ctx_t *startup_connection;
   sr_session_ctx_t *startup_session;
+  size_t interface_count;
+  char interface_names[MAX_INTERFACES][MAX_INTERFACE_NAME];
 };
-
-/* /\* Update UCI configuration from Sysrepo datastore. *\/ */
-/* static int config_store_to_uci(struct plugin_ctx *pctx, sr_session_ctx_t *sess); */
-
-/* /\* Update startup datastore configuration from UCI configuration file values. *\/ */
-/* static int config_uci_to_store(struct plugin_ctx *pctx, sr_session_ctx_t *sess); */
-
-/* /\* Update UCI configuration given ucipath and some string value. *\/ */
-/* static int set_uci_item(struct uci_context *uctx, char *ucipath, char *value); */
-
-/* /\* Get value from UCI configuration given ucipath and result holder. *\/ */
-/* static int get_uci_item(struct uci_context *uctx, char *ucipath, char **value); */

@@ -614,6 +614,34 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
     return rc;
 }
 
+static int
+get_uci_wireless_devices(struct plugin_ctx *pctx)
+{
+    const char uci_package_name[] = "wireless";
+    struct uci_element *e;
+    struct uci_section *s;
+    struct uci_package *package = NULL;
+    int rc;
+
+    rc = uci_load(pctx->uctx, uci_package_name, &package);
+    UCI_CHECK_RET(rc, exit, "[%d] Could not load package %s.", rc, uci_package_name);
+
+    uci_foreach_element(&package->sections, e) {
+        s = uci_to_section(e);
+        char *type = s->type;
+        char *name = s->e.name;
+
+        if (strcmp("interface", type) == 0) {
+            strcpy(pctx->interface_names[pctx->interface_count++], name);
+        }
+    }
+
+  exit:
+    if (package) uci_unload(pctx->uctx, package);
+    return rc;
+}
+
+
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
@@ -633,6 +661,9 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
     *private_ctx = ctx;
     ctx->subscription = subscription;
+
+    rc = get_uci_wireless_devices(ctx);
+    UCI_CHECK_RET(rc, error, "[%d] Could not get list of wireless devices from UCI.", rc);
 
     INF_MSG("Connecting to sysrepo ...");
     rc = sr_connect(YANG_MODEL, SR_CONN_DEFAULT, &ctx->startup_connection);
