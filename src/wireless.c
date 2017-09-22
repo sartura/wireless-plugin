@@ -369,14 +369,17 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 static int
 init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
 {
-    int rc = SR_ERR_OK;
+    const char uci_package_name[] = "wireless";
     struct uci_element *e;
     struct uci_section *s;
     struct uci_package *package = NULL;
     char xpath[XPATH_MAX_LEN];
     char ucipath[MAX_UCI_PATH];
+    int rc = SR_ERR_OK;
 
-    rc = uci_load(pctx->uctx, "wireless", &package);
+    rc = uci_load(pctx->uctx, uci_package_name, &package);
+    UCI_CHECK_RET(rc, exit, "[%d] Could not load package %s.", rc, uci_package_name);
+
     int interface_index = 0;
 
     uci_foreach_element(&package->sections, e) {
@@ -461,6 +464,7 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
     SR_CHECK_RET(rc, exit, "Couldn't commit initial interfaces: %s", sr_strerror(rc));
 
   exit:
+    if (package) uci_unload(pctx->uctx, package);
     return rc;
 }
 

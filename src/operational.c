@@ -120,7 +120,7 @@ operstatus_channel_f(json_object *base, char *interface_name, struct list_head *
 
     char xpath[MAX_XPATH];
     /* sprintf(xpath, fmt, interface_name); */
-    char *fmt = "/wireless:devices-state/device[name='wl0']/channel";
+    char *fmt = "/wireless:devices-state/device[name='wl1']/channel";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
     sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
 
@@ -135,7 +135,7 @@ operational_channel(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_channel_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", "wl0");
+    blobmsg_add_string(&buf, "vif", "wl1");
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
@@ -160,7 +160,7 @@ operstatus_encryption_f(json_object *base, char *interface_name, struct list_hea
 
     char xpath[MAX_XPATH];
     /* sprintf(xpath, fmt, interface_name); */
-    char *fmt = "/wireless:devices-state/device[name='wl0']/encryption";
+    char *fmt = "/wireless:devices-state/device[name='wl1']/encryption";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
     sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
 
@@ -175,7 +175,7 @@ operational_encryption(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_encryption_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", "wl0");
+    blobmsg_add_string(&buf, "vif", "wl1");
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
@@ -200,7 +200,7 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
 
     char xpath[MAX_XPATH];
     /* sprintf(xpath, fmt, interface_name); */
-    char *fmt = "/wireless:devices-state/device[name='wl0']/ssid";
+    char *fmt = "/wireless:devices-state/device[name='wl1']/ssid";
     sr_val_set_xpath(list_value->value, fmt); /* path not fmt */
     sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
 
@@ -215,7 +215,7 @@ operational_ssid(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_ssid_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", "wl0");
+    blobmsg_add_string(&buf, "vif", "wl1");
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
