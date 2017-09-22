@@ -66,7 +66,6 @@ ubus_base_cb(struct ubus_request *req, int type, struct blob_attr *msg)
 {
     char *json_string;
     struct json_object *base_object;
-
     struct status_container *status_container_msg;
 
     status_container_msg = (struct status_container *) req->priv;
@@ -88,11 +87,9 @@ static int
 ubus_base(const char *ubus_lookup_path,
           struct status_container *msg, struct blob_buf *blob)
 {
-    /* INF("list null %d", msg->list==NULL); */
     uint32_t id = 0;
     int rc = SR_ERR_OK;
 
-    /* INF("ctx null %d %s\n\t%s", ctx==NULL, ubus_lookup_path, ubuf); */
     rc = ubus_lookup_id(ctx, ubus_lookup_path, &id);
     if (rc) {
         goto exit;
@@ -130,9 +127,8 @@ operstatus_channel_f(json_object *base, char *interface_name, struct list_head *
     if (!ubus_result) return;
 
     sprintf(xpath, fmt, interface_name);
-    sr_val_set_xpath(list_value->value, xpath); /* path not fmt */
+    sr_val_set_xpath(list_value->value, xpath);
     sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
-
 
     list_add(&list_value->head, list);
 }
@@ -224,6 +220,49 @@ operational_ssid(char *interface_name, struct list_head *list)
     blob_buf_init(&buf, 0);
     blobmsg_add_string(&buf, "vif", strdup(interface_name));
     ubus_base("router.wireless", msg, &buf);
+
+    return SR_ERR_OK;
+}
+
+
+static void
+operstatus_up_f(json_object *base, char *interface_name, struct list_head *list)
+{
+    struct json_object *t;
+    const char *ubus_result;
+    struct value_node *list_value;
+    char *fmt = "/wireless:devices-state/device[name='%s']/up";
+    char xpath[MAX_XPATH];
+
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
+
+    json_object_object_get_ex(base,
+                              "up",
+                              &t);
+    ubus_result = json_object_to_json_string(t);
+    if (!ubus_result) return;
+
+    sprintf(xpath, fmt, interface_name);
+    sr_val_set_xpath(list_value->value, xpath);
+    bool up = strcmp("true", ubus_result) == 0 ? true : false;
+    INF("%d: %s", up, up ? "true" : "false");
+    list_value->value->type = SR_BOOL_T;
+    list_value->value->data.bool_val = up;
+    /* sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result); */
+
+    list_add(&list_value->head, list);
+}
+
+int
+operational_up(char *interface_name, struct list_head *list)
+{
+    struct status_container *msg = NULL;
+    make_status_container(&msg, "status", operstatus_up_f, interface_name, list);
+    struct blob_buf buf = {0,};
+    blob_buf_init(&buf, 0);
+    blobmsg_add_string(&buf, "name", strdup(interface_name));
+    ubus_base("network.device", msg, &buf);
 
     return SR_ERR_OK;
 }

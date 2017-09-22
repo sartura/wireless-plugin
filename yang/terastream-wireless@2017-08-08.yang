@@ -271,6 +271,11 @@ module wireless {
           default "psk2";
         }
 
+        leaf up {
+          type boolean;
+          description
+            "Is interface active or not.";
+        }
       }
     }
 }
