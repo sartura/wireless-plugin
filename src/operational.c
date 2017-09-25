@@ -16,7 +16,7 @@ static char *
 remove_quotes(const char *str)
 {
   char *unquoted;
-  unquoted = strdup(str);
+  unquoted = (char *)str;
   unquoted = unquoted + 1;
   unquoted[strlen(unquoted) - 1] = '\0';
 
@@ -117,15 +117,14 @@ operstatus_channel_f(json_object *base, char *interface_name, struct list_head *
     char *fmt = "/wireless:devices-state/device[name='%s']/channel";
     char xpath[MAX_XPATH];
 
-    list_value = calloc(1, sizeof *list_value);
-    sr_new_values(1, &list_value->value);
-
     json_object_object_get_ex(base,
                               "channel",
                               &t);
     ubus_result = json_object_to_json_string(t);
     if (!ubus_result) return;
 
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
     sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
@@ -155,15 +154,14 @@ operstatus_encryption_f(json_object *base, char *interface_name, struct list_hea
     char *fmt = "/wireless:devices-state/device[name='%s']/encryption";
     char xpath[MAX_XPATH];
 
-    list_value = calloc(1, sizeof *list_value);
-    sr_new_values(1, &list_value->value);
-
     json_object_object_get_ex(base,
                               "encryption",
                               &t);
     ubus_result = json_object_to_json_string(t);
     if (!ubus_result) return;
 
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
     sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
@@ -194,19 +192,17 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     char *fmt = "/wireless:devices-state/device[name='%s']/ssid";
     char xpath[MAX_XPATH];
 
-    list_value = calloc(1, sizeof *list_value);
-    sr_new_values(1, &list_value->value);
-
     json_object_object_get_ex(base,
                               "ssid",
                               &t);
     ubus_result = json_object_to_json_string(t);
     if (!ubus_result) return;
 
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
     sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
-
 
     list_add(&list_value->head, list);
 }
@@ -234,22 +230,20 @@ operstatus_up_f(json_object *base, char *interface_name, struct list_head *list)
     char *fmt = "/wireless:devices-state/device[name='%s']/up";
     char xpath[MAX_XPATH];
 
-    list_value = calloc(1, sizeof *list_value);
-    sr_new_values(1, &list_value->value);
-
     json_object_object_get_ex(base,
                               "up",
                               &t);
     ubus_result = json_object_to_json_string(t);
     if (!ubus_result) return;
 
+    list_value = calloc(1, sizeof *list_value);
+    sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
     bool up = strcmp("true", ubus_result) == 0 ? true : false;
     INF("%d: %s", up, up ? "true" : "false");
     list_value->value->type = SR_BOOL_T;
     list_value->value->data.bool_val = up;
-    /* sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result); */
 
     list_add(&list_value->head, list);
 }

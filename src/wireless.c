@@ -634,15 +634,17 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
     cnt = list_size(&list);
     INF("Allocating %zu values.", cnt);
 
-    struct value_node *vn;
+    struct value_node *vn, *q;
     size_t j = 0;
     rc = sr_new_values(cnt, values);
     SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
 
-    list_for_each_entry(vn, &list, head) {
+    list_for_each_entry_safe(vn, q, &list, head) {
         rc = sr_dup_val_data(&(*values)[j], vn->value);
         j += 1;
         sr_free_val(vn->value);
+        list_del(&vn->head);
+        free(vn);
     }
 
     *values_cnt = cnt;
@@ -694,7 +696,6 @@ get_uci_wireless_devices(struct plugin_ctx *pctx)
 int
 sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
-    sr_subscription_ctx_t *subscription = NULL;
     int rc = SR_ERR_OK;
 
     INF_MSG("sr_plugin_init_cb for network-plugin");
@@ -709,7 +710,6 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     }
 
     *private_ctx = ctx;
-    ctx->subscription = subscription;
 
     rc = get_uci_wireless_devices(ctx);
     UCI_CHECK_RET(rc, error, "[%d] Could not get list of wireless devices from UCI.", rc);
@@ -749,7 +749,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
   error:
     SRP_LOG_ERR("Plugin initialization failed: %s", sr_strerror(rc));
-    sr_unsubscribe(session, subscription);
+    sr_unsubscribe(session, ctx->subscription);
     free(ctx);
     return rc;
 }
