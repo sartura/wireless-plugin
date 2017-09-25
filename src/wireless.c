@@ -357,13 +357,13 @@ restart_network(int wait_time)
 static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
 {
-    struct plugin_ctx *pctx = (struct plugin_ctx*) private_ctx;
-    sr_change_iter_t *it = NULL;
-    int rc = SR_ERR_OK;
-    sr_change_oper_t oper;
-    sr_val_t *old_value = NULL;
-    sr_val_t *new_value = NULL;
-    char change_path[XPATH_MAX_LEN] = {0,};
+    /* struct plugin_ctx *pctx = (struct plugin_ctx*) private_ctx; */
+    /* sr_change_iter_t *it = NULL; */
+    /* int rc = SR_ERR_OK; */
+    /* sr_change_oper_t oper; */
+    /* sr_val_t *old_value = NULL; */
+    /* sr_val_t *new_value = NULL; */
+    /* char change_path[XPATH_MAX_LEN] = {0,}; */
 
     INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
 
@@ -374,11 +374,11 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     /* snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name); */
 
-    rc = sr_get_changes_iter(session, change_path , &it);
-    if (SR_ERR_OK != rc) {
-        printf("Get changes iter failed for xpath %s", change_path);
-        goto cleanup;
-    }
+    /* rc = sr_get_changes_iter(session, change_path , &it); */
+    /* if (SR_ERR_OK != rc) { */
+    /*     printf("Get changes iter failed for xpath %s", change_path); */
+    /*     goto cleanup; */
+    /* } */
 
     /* while (SR_ERR_OK == (rc = sr_get_change_next(session, it, */
     /*                                              &oper, &old_value, &new_value))) { */
@@ -405,7 +405,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
 
   cleanup:
-    sr_free_change_iter(it);
+    /* sr_free_change_iter(it); */
 
     return SR_ERR_OK;
 }
