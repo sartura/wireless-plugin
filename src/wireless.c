@@ -317,6 +317,41 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
     return SR_ERR_INTERNAL;
 }
 
+/* Text representation of Sysrepo event code. */
+static const char *
+ev_to_str(sr_notif_event_t ev) {
+  switch (ev) {
+  case SR_EV_VERIFY:
+    return "verify";
+  case SR_EV_APPLY:
+    return "apply";
+  case SR_EV_ABORT:
+  default:
+    return "abort";
+  }
+}
+
+/* Restart network given time to wait before calling script.
+ * Function is parameterized with number of seconds to enable
+ * waiting for Sysrepo and UCI to sync.
+ */
+static void
+restart_network(int wait_time)
+{
+  pid_t restart_pid;
+
+  restart_pid = fork();
+  if (restart_pid > 0) {
+    INF("[pid=%d] Restarting network in %d seconds after module is changed.", restart_pid, wait_time);
+    sleep(wait_time);
+    execv("/etc/init.d/network", (char *[]){ "/etc/init.d/network", "restart", NULL });
+    exit(0);
+  } else {
+    INF("[pid=%d] Could not execute network restart, do it manually?", restart_pid);
+  }
+}
+
+
 static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
 {
@@ -327,6 +362,8 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     sr_val_t *old_value = NULL;
     sr_val_t *new_value = NULL;
     char change_path[XPATH_MAX_LEN] = {0,};
+
+    INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
 
     if (SR_EV_APPLY == event) {
         rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
@@ -354,14 +391,15 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
     if (SR_EV_APPLY == event) { 
-      pid_t pid = fork();
-      if (pid==0) {
-        INF("Restarting network - applying changes for %s", YANG_MODEL);
-        execl("/etc/init.d/network", "network", "restart", (char *) NULL);
-        exit(127);
-      } else {
-        waitpid(pid, 0, 0);
-      }
+      restart_network(2);
+      /* pid_t pid = fork(); */
+      /* if (pid==0) { */
+      /*   INF("Restarting network - applying changes for %s", YANG_MODEL); */
+      /*   execl("/etc/init.d/network", "network", "restart", (char *) NULL); */
+      /*   exit(127); */
+      /* } else { */
+      /*   waitpid(pid, 0, 0); */
+      /* } */
     }
 
   cleanup:
