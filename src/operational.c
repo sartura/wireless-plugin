@@ -20,7 +20,7 @@ remove_quotes(const char *str)
   unquoted = unquoted + 1;
   unquoted[strlen(unquoted) - 1] = '\0';
 
-  return strdup(unquoted);
+  return unquoted;
 }
 
 int
@@ -140,7 +140,7 @@ operational_channel(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_channel_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", strdup(interface_name));
+    blobmsg_add_string(&buf, "vif", interface_name);
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
@@ -179,7 +179,7 @@ operational_encryption(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_encryption_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", strdup(interface_name));
+    blobmsg_add_string(&buf, "vif", interface_name);
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
@@ -218,7 +218,7 @@ operational_ssid(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_ssid_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "vif", strdup(interface_name));
+    blobmsg_add_string(&buf, "vif", interface_name);
     ubus_base("router.wireless", msg, &buf);
 
     return SR_ERR_OK;
@@ -261,7 +261,7 @@ operational_up(char *interface_name, struct list_head *list)
     make_status_container(&msg, "status", operstatus_up_f, interface_name, list);
     struct blob_buf buf = {0,};
     blob_buf_init(&buf, 0);
-    blobmsg_add_string(&buf, "name", strdup(interface_name));
+    blobmsg_add_string(&buf, "name", interface_name);
     ubus_base("network.device", msg, &buf);
 
     return SR_ERR_OK;
