@@ -258,10 +258,12 @@ wireless_xpath_to_interface(sr_session_ctx_t *session, char *xpath, struct wirel
     interface->option = sr_xpath_last_node(xpath, &state);
     sr_xpath_recover(&state);
 
-    return SR_ERR_OK;
+    free(name_key);
+    free(ssid_key);
+    sr_free_val(value);
 
   error:
-    return -1;
+    return rc == SR_ERR_OK ? rc : -1;
 }
 
 static int
@@ -391,7 +393,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
     if (SR_EV_APPLY == event) { 
-      restart_network(2);
+      /* restart_network(2); */
       /* pid_t pid = fork(); */
       /* if (pid==0) { */
       /*   INF("Restarting network - applying changes for %s", YANG_MODEL); */
@@ -730,7 +732,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
 
     INF_MSG("sr_plugin_init_cb for wireless");
-    rc = sr_module_change_subscribe(session, "wireless", wireless_change_cb, *private_ctx,
+    rc = sr_module_change_subscribe(session, YANG_MODEL, wireless_change_cb, *private_ctx,
                                     0, SR_SUBSCR_DEFAULT, &subscription);
     SR_CHECK_RET(rc, error, "initialization error: %s", sr_strerror(rc));
 
