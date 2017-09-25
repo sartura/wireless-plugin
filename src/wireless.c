@@ -365,7 +365,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     /* sr_val_t *new_value = NULL; */
     /* char change_path[XPATH_MAX_LEN] = {0,}; */
 
-    INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
+    /* INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event)); */
 
     /* if (SR_EV_APPLY == event) { */
     /*     rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP); */
@@ -609,55 +609,55 @@ sr_dup_val_data(sr_val_t *dest, const sr_val_t *source)
 static int
 wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
 {
-    char *node;
-    struct plugin_ctx *pctx = (struct plugin_ctx *) private_ctx;
-    (void) pctx;
-    size_t n_mappings;
-    int rc = SR_ERR_OK;
+  /*   char *node; */
+  /*   struct plugin_ctx *pctx = (struct plugin_ctx *) private_ctx; */
+  /*   (void) pctx; */
+  /*   size_t n_mappings; */
+  /*   int rc = SR_ERR_OK; */
 
-    INF("%s", cb_xpath);
-    struct list_head list = LIST_HEAD_INIT(list);
-    operational_start();
-    oper_func func;
-    n_mappings = ARR_SIZE(table_operational);
+  /*   INF("%s", cb_xpath); */
+  /*   struct list_head list = LIST_HEAD_INIT(list); */
+  /*   operational_start(); */
+  /*   oper_func func; */
+  /*   n_mappings = ARR_SIZE(table_operational); */
 
-    for (size_t i = 0; i < n_mappings; i++) {
-        node = table_operational[i].node;
-        func = table_operational[i].op_func;
-        INF("\tDiagnostics for: %s", node);
-        for (size_t j = 0; j < pctx->interface_count; j++) {
-            rc = func(pctx->interface_names[j], &list);
-        }
-    }
+  /*   for (size_t i = 0; i < n_mappings; i++) { */
+  /*       node = table_operational[i].node; */
+  /*       func = table_operational[i].op_func; */
+  /*       INF("\tDiagnostics for: %s", node); */
+  /*       for (size_t j = 0; j < pctx->interface_count; j++) { */
+  /*           rc = func(pctx->interface_names[j], &list); */
+  /*       } */
+  /*   } */
 
-    size_t cnt = 0;
-    cnt = list_size(&list);
-    INF("Allocating %zu values.", cnt);
+  /*   size_t cnt = 0; */
+  /*   cnt = list_size(&list); */
+  /*   INF("Allocating %zu values.", cnt); */
 
-    struct value_node *vn;
-    size_t j = 0;
-    rc = sr_new_values(cnt, values);
-    SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
+  /*   struct value_node *vn; */
+  /*   size_t j = 0; */
+  /*   rc = sr_new_values(cnt, values); */
+  /*   SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc)); */
 
-    list_for_each_entry(vn, &list, head) {
-        rc = sr_dup_val_data(&(*values)[j], vn->value);
-        j += 1;
-        sr_free_val(vn->value);
-    }
+  /*   list_for_each_entry(vn, &list, head) { */
+  /*       rc = sr_dup_val_data(&(*values)[j], vn->value); */
+  /*       j += 1; */
+  /*       sr_free_val(vn->value); */
+  /*   } */
 
-    *values_cnt = cnt;
+  /*   *values_cnt = cnt; */
 
-    list_del(&list);
+  /*   list_del(&list); */
 
-    if (*values_cnt > 0) {
-        INF("[%d - %s]Debug sysrepo values printout: %zu", rc, sr_strerror(rc), *values_cnt);
-        for (size_t i = 0; i < *values_cnt; i++){
-            sr_print_val(&(*values)[i]);
-        }
-    }
+  /*   if (*values_cnt > 0) { */
+  /*       INF("[%d - %s]Debug sysrepo values printout: %zu", rc, sr_strerror(rc), *values_cnt); */
+  /*       for (size_t i = 0; i < *values_cnt; i++){ */
+  /*           sr_print_val(&(*values)[i]); */
+  /*       } */
+  /*   } */
 
-  exit:
-    return rc;
+  /* exit: */
+  /*   return rc; */
 }
 
 static int
