@@ -380,16 +380,16 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
         goto cleanup;
     }
 
-    /* while (SR_ERR_OK == (rc = sr_get_change_next(session, it, */
-    /*                                              &oper, &old_value, &new_value))) { */
-    /*     if (SR_OP_CREATED == oper || SR_OP_MODIFIED == oper) { */
-    /*         rc = sysrepo_to_uci(session, pctx->uctx, new_value); */
-    /*         sr_print_val(new_value); */
-    /*     } */
+    while (SR_ERR_OK == (rc = sr_get_change_next(session, it,
+                                                 &oper, &old_value, &new_value))) {
+        if (SR_OP_CREATED == oper || SR_OP_MODIFIED == oper) {
+            rc = sysrepo_to_uci(session, pctx->uctx, new_value);
+            sr_print_val(new_value);
+        }
 
-    /*     sr_free_val(old_value); */
-    /*     sr_free_val(new_value); */
-    /* } */
+        sr_free_val(old_value);
+        sr_free_val(new_value);
+    }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
     if (SR_EV_APPLY == event) { 
