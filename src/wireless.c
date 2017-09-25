@@ -771,6 +771,10 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
     if (NULL != ctx->uctx) {
         uci_free_context(ctx->uctx);
     }
+    for (size_t i=0; i < ctx->interface_count; i++) {
+      free(ctx->interface_names[i]);
+      
+    }
     operational_stop();
     free(ctx);
 
