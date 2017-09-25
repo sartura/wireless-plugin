@@ -353,12 +353,15 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     }
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
-    pid_t pid = fork();
-    if (pid==0) {
+    if (SR_EV_APPLY == event) { 
+      pid_t pid = fork();
+      if (pid==0) {
+        INF("Restarting network - applying changes for %s", YANG_MODEL);
         execl("/etc/init.d/network", "network", "restart", (char *) NULL);
         exit(127);
-    } else {
+      } else {
         waitpid(pid, 0, 0);
+      }
     }
 
   cleanup:
