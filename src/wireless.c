@@ -733,13 +733,13 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
     INF_MSG("sr_plugin_init_cb for wireless");
     rc = sr_module_change_subscribe(session, YANG_MODEL, wireless_change_cb, *private_ctx,
-                                    0, SR_SUBSCR_DEFAULT, &subscription);
+                                    0, SR_SUBSCR_DEFAULT, &ctx->subscription);
     SR_CHECK_RET(rc, error, "initialization error: %s", sr_strerror(rc));
 
     /* Operational data handling. */
     INF_MSG("Subscribing to operational");
     rc = sr_dp_get_items_subscribe(session, "/wireless:devices-state", wireless_operational_cb, *private_ctx,
-                                   SR_SUBSCR_DEFAULT, &subscription);
+                                   SR_SUBSCR_DEFAULT, &ctx->subscription);
     SR_CHECK_RET(rc, error, "Error by sr_dp_get_items_subscribe: %s", sr_strerror(rc));
 
     SRP_LOG_DBG_MSG("Plugin initialized successfully");
