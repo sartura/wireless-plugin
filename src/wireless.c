@@ -739,7 +739,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     /* Operational data handling. */
     INF_MSG("Subscribing to operational");
     rc = sr_dp_get_items_subscribe(session, "/wireless:devices-state", wireless_operational_cb, *private_ctx,
-                                   SR_SUBSCR_DEFAULT, &ctx->subscription);
+                                   SR_SUBSCR_CTX_REUSE, &ctx->subscription);
     SR_CHECK_RET(rc, error, "Error by sr_dp_get_items_subscribe: %s", sr_strerror(rc));
 
     SRP_LOG_DBG_MSG("Plugin initialized successfully");
@@ -761,7 +761,9 @@ sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
     if (!private_ctx) return;
 
     struct plugin_ctx *ctx = private_ctx;
-    sr_unsubscribe(session, ctx->subscription);
+    if (NULL != ctx->subscription) {
+        sr_unsubscribe(session, ctx->subscription);
+    }
     if (NULL != ctx->startup_session) {
         sr_session_stop(ctx->startup_session);
     }
