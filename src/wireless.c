@@ -348,7 +348,7 @@ restart_network(int wait_time)
     sleep(wait_time);
     execv("/etc/init.d/network", (char *[]){ "/etc/init.d/network", "restart", NULL });
     exit(0);
-  } else {
+  } else if (restart_pid < 0) {
     INF("[pid=%d] Could not execute network restart, do it manually?", restart_pid);
   }
 }
@@ -747,7 +747,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     SR_CHECK_RET(rc, error, "Error by sr_session_start: %s", sr_strerror(rc));
 
     rc = sync_datastores(ctx);
-    SR_CHECK_RET(rc, error, "Couldn't initialize wirelessx: %s", sr_strerror(rc));
+    SR_CHECK_RET(rc, error, "Couldn't initialize wireless: %s", sr_strerror(rc));
     /* Init wireless. */
 
 
