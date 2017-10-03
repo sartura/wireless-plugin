@@ -1,6 +1,8 @@
 #include "operational.h"
 #include "common.h"
 
+#define MAX_UBUS_PATH 100
+#define UBUS_INVOKE_TIMEOUT 200
 
 struct status_container {
     char *interface_name;
@@ -95,7 +97,7 @@ ubus_base(const char *ubus_lookup_path,
         goto exit;
     }
 
-    rc = ubus_invoke(ctx, id, "status", blob->head, ubus_base_cb, (void *) msg, 2000);
+    rc = ubus_invoke(ctx, id, "status", blob->head, ubus_base_cb, (void *) msg, UBUS_INVOKE_TIMEOUT);
     if (rc) {
         INF("ubus [%s]: no object %s\n", ubus_strerror(rc), msg->ubus_method);
         goto exit;

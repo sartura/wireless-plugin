@@ -641,10 +641,11 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_
 
     list_for_each_entry_safe(vn, q, &list, head) {
         rc = sr_dup_val_data(&(*values)[j], vn->value);
-        j += 1;
+        SR_CHECK_RET(rc, exit, "Couldn't copy value: %s", sr_strerror(rc));
         sr_free_val(vn->value);
         list_del(&vn->head);
         free(vn);
+        j += 1;
     }
 
     *values_cnt = cnt;
