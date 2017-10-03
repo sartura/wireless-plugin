@@ -368,7 +368,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
 
     if (SR_EV_APPLY == event) {
-        rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
+        /* rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP); */
         INF("\n\n ========== CONFIG HAS CHANGED: %s ==========\n\n", module_name);
     }
 
@@ -393,15 +393,15 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
     if (SR_EV_APPLY == event) { 
-      /* restart_network(2); */
-      /* pid_t pid = fork(); */
-      /* if (pid==0) { */
-      /*   INF("Restarting network - applying changes for %s", YANG_MODEL); */
-      /*   execl("/etc/init.d/network", "network", "restart", (char *) NULL); */
-      /*   exit(127); */
-      /* } else { */
-      /*   waitpid(pid, 0, 0); */
-      /* } */
+      restart_network(2);
+      pid_t pid = fork();
+      if (pid==0) {
+        INF("Restarting network - applying changes for %s", YANG_MODEL);
+        execl("/etc/init.d/network", "network", "restart", (char *) NULL);
+        exit(127);
+      } else {
+        waitpid(pid, 0, 0);
+      }
     }
 
   cleanup:
