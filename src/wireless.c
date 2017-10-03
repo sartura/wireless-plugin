@@ -353,6 +353,21 @@ restart_network(int wait_time)
   }
 }
 
+static int
+wireless_change_cb_check(sr_val_t *value)
+{
+    char *node_name;
+    int rc = SR_ERR_OK;
+
+    node_name = sr_xpath_node_name(value->xpath);
+    if (strcmp("name", node_name) == 0) {
+        INF("Can't change device name %s", node_name);
+        return SR_ERR_UNSUPPORTED;
+    }
+
+    return rc;
+
+}
 
 static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
@@ -382,6 +397,10 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     while (SR_ERR_OK == (rc = sr_get_change_next(session, it,
                                                  &oper, &old_value, &new_value))) {
+        rc = wireless_change_cb_check(new_value);
+        if (rc) {
+            return rc;
+        }
         if (SR_OP_CREATED == oper || SR_OP_MODIFIED == oper) {
             rc = sysrepo_to_uci(session, pctx->uctx, new_value);
             sr_print_val(new_value);
