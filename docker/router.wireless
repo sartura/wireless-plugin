@@ -1,0 +1,28 @@
+#!/bin/sh
+
+case "$1" in
+	list)
+		echo '{ "status": {"vif":"wl0" } }'
+	;;
+	call)
+		case "$2" in
+			status)
+				# return json object or an array
+				# echo '{ "sip": { "sip0": { "registered": false, "registry_request_sent": false, "port": 5060, "username": "+3852140873X", "domain": "ims.t-com.hr", "domain_port": 1124085810, "refresh_interval": 300, "state": "Unregistered", "registration_time": "-", "last_successful_registration": "-" }, "sip1": { "registered": false, "registry_request_sent": false, "port": 5060, "username": "+3852140873X", "domain": "ims.t-com.hr", "domain_port": 1091177843, "refresh_interval": 300, "state": "Unregistered", "registration_time": "-", "last_successful_registration": "-" } } }'
+          echo '{
+	        "wldev": "wl0",
+	"radio": 1,
+	"ssid": "PANTERA-7666",
+	"bssid": "00:22:07:67:78:57",
+	"encryption": "WPA2 PSK",
+	"frequency": 5,
+	"channel": 100,
+	"bandwidth": 80,
+	"noise": -74,
+	"rate": 433
+}'
+
+			;;
+		esac
+	;;
+esac
