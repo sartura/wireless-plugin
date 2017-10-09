@@ -345,29 +345,14 @@ restart_network(int wait_time)
   restart_pid = fork();
   if (restart_pid > 0) {
     INF("[pid=%d] Restarting network in %d seconds after module is changed.", restart_pid, wait_time);
-    sleep(wait_time);
     execv("/etc/init.d/network", (char *[]){ "/etc/init.d/network", "restart", NULL });
+    sleep(wait_time);
     exit(0);
   } else if (restart_pid < 0) {
     INF("[pid=%d] Could not execute network restart, do it manually?", restart_pid);
   }
 }
 
-static int
-wireless_change_cb_check(sr_val_t *value)
-{
-    char *node_name;
-    int rc = SR_ERR_OK;
-
-    node_name = sr_xpath_node_name(value->xpath);
-    if (strcmp("name", node_name) == 0) {
-        INF("Can't change device name %s", node_name);
-        return SR_ERR_UNSUPPORTED;
-    }
-
-    return rc;
-
-}
 
 static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
@@ -397,10 +382,6 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     while (SR_ERR_OK == (rc = sr_get_change_next(session, it,
                                                  &oper, &old_value, &new_value))) {
-        rc = wireless_change_cb_check(new_value);
-        if (rc) {
-            return rc;
-        }
         if (SR_OP_CREATED == oper || SR_OP_MODIFIED == oper) {
             rc = sysrepo_to_uci(session, pctx->uctx, new_value);
             sr_print_val(new_value);
@@ -413,14 +394,6 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     if (SR_EV_APPLY == event) { 
       restart_network(2);
-      pid_t pid = fork();
-      if (pid==0) {
-        INF("Restarting network - applying changes for %s", YANG_MODEL);
-        execl("/etc/init.d/network", "network", "restart", (char *) NULL);
-        exit(127);
-      } else {
-        waitpid(pid, 0, 0);
-      }
     }
 
   cleanup:
