@@ -120,21 +120,20 @@ val_has_data(sr_type_t type) {
 static char *
 get_key_value(char *orig_xpath, int n)
 {
-    char *key = NULL, *node = NULL, *xpath = NULL, *val = NULL;
-    sr_xpath_ctx_t state = {0,0,0,0};
+    char *key = NULL, *node = NULL;
+    sr_xpath_ctx_t state = {0, 0, 0, 0};
+    int counter = 0;
 
-    xpath = strdup(orig_xpath);
-    node = sr_xpath_next_node(xpath, &state);
+    node = sr_xpath_next_node(orig_xpath, &state);
     if (NULL == node) {
         goto error;
     }
-    int counter = 0;
-    while(true) {
+    while (true) {
         key = sr_xpath_next_key_name(NULL, &state);
         if (NULL != key) {
-            val = sr_xpath_next_key_value(NULL, &state);
-            if (counter++ == n) break;
-            /* break; */
+            if (counter++ != n) continue;
+            key = strdup(sr_xpath_next_key_value(NULL, &state));
+            break;
         }
         node = sr_xpath_next_node(NULL, &state);
         if (NULL == node) {
@@ -142,11 +141,9 @@ get_key_value(char *orig_xpath, int n)
         }
     }
 
-  error:
-    if (NULL != xpath) {
-        free(xpath);
-    }
-    return key ? strdup(val) : NULL;
+error:
+    sr_xpath_recover(&state);
+    return key;
 }
 
 static int
