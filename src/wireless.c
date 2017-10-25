@@ -271,6 +271,7 @@ ev_to_str(sr_notif_event_t ev) {
 static void
 restart_network_over_ubus(int wait_time)
 {
+    /*
     struct blob_buf buf = {0};
     uint32_t id = 0;
     int u_rc = 0;
@@ -299,6 +300,8 @@ cleanup:
         ubus_free(u_ctx);
         blob_buf_free(&buf);
     }
+    */
+    system("/etc/init.d/network reload > /dev/null");
 }
 
 static int
