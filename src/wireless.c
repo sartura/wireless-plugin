@@ -330,26 +330,38 @@ ev_to_str(sr_notif_event_t ev) {
   }
 }
 
-/* Restart network given time to wait before calling script.
- * Function is parameterized with number of seconds to enable
- * waiting for Sysrepo and UCI to sync.
- */
 static void
-restart_network(int wait_time)
+restart_network_over_ubus(int wait_time)
 {
-  pid_t restart_pid;
+	struct blob_buf buf = {0};
+	uint32_t id = 0;
+	int u_rc = 0;
 
-  restart_pid = fork();
-  if (restart_pid > 0) {
-    INF("[pid=%d] Restarting network in %d seconds after module is changed.", restart_pid, wait_time);
-    execv("/etc/init.d/network", (char *[]){ "/etc/init.d/network", "restart", NULL });
-    sleep(wait_time);
-    exit(0);
-  } else if (restart_pid < 0) {
-    INF("[pid=%d] Could not execute network restart, do it manually?", restart_pid);
-  }
+	struct ubus_context *u_ctx = ubus_connect(NULL);
+	if (u_ctx == NULL) {
+		ERR_MSG("Could not connect to ubus");
+		goto cleanup;
+	}
+
+	blob_buf_init(&buf, 0);
+	u_rc = ubus_lookup_id(u_ctx, "network", &id);
+	if (UBUS_STATUS_OK != u_rc) {
+		ERR("ubus [%d]: no object network\n", u_rc);
+		goto cleanup;
+	}
+
+	u_rc = ubus_invoke(u_ctx, id, "restart", buf.head, NULL, NULL, wait_time * 1000);
+	if (UBUS_STATUS_OK != u_rc) {
+		ERR("ubus [%d]: no object restart\n", u_rc);
+		goto cleanup;
+	}
+
+cleanup:
+	if (NULL != u_ctx) {
+		ubus_free(u_ctx);
+		blob_buf_free(&buf);
+	}
 }
-
 
 static int
 wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
@@ -390,7 +402,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     INF_MSG("\n\n ========== END OF CHANGES =======================================\n\n");
 
     if (SR_EV_APPLY == event) { 
-      restart_network(2);
+      restart_network_over_ubus(2);
     }
 
   cleanup:
