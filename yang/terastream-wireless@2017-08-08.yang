@@ -162,12 +162,18 @@ module wireless {
         }
 
         list interface {
-            key "ssid";
+            key "name";
 
             description
               "List of configured interfaces on device";
 
             unique "index";
+
+            leaf name {
+                type string;
+                description
+                 "Name of the uci config section";
+            }
 
             leaf device {
                  type string;
