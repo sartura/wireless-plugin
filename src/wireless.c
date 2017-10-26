@@ -55,6 +55,7 @@ static sr_uci_link table_wireless[] = {
 
 static sr_uci_link table_interface[] = {
     { 0, SR_STRING_T, "wireless.%s.ssid", "/wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
+    { 0, SR_INT8_T,   "wireless.%s.enabled", "/wireless:devices/device[name='%s']/interface[name='%s']/enabled"},
     { 0, SR_STRING_T, "wireless.%s.device", "/wireless:devices/device[name='%s']/interface[name='%s']/device"},
     { 0, SR_STRING_T, "wireless.%s.network", "/wireless:devices/device[name='%s']/interface[name='%s']/network"},
     { 0, SR_STRING_T, "wireless.%s.mode", "/wireless:devices/device[name='%s']/interface[name='%s']/mode"},
@@ -409,7 +410,7 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 }
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
                 /* INF("Setting device %s to %s", xpath, uci_val); */
-                INF("xpath %s", xpath);
+                INF("%s -> %s", xpath, uci_val);
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
                 free(uci_val);
@@ -432,8 +433,7 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                     continue;
                 }
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
-                INF("Setting device %s to %s", xpath, uci_val);
-                INF("xpath %s", xpath);
+                INF("%s -> %s", xpath, uci_val);
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
             }

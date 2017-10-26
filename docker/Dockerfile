@@ -163,12 +163,10 @@ RUN \
 
 # wireless plugin
 RUN \
-      cd /opt/dev && \
+      cd /opt/dev && echo "test" && \
 	  git clone https://github.com/sartura/wireless-plugin.git && \
 	  cd wireless-plugin && mkdir build && cd build && \
 	  git checkout devel && \
-    git fetch origin devel && \
-    git rebase origin/devel && \
 	  cmake .. && \
 	  make -j2 && \
 	  make install && \
@@ -184,8 +182,8 @@ ENV EDITOR vim
 EXPOSE 830
 
 COPY wireless /etc/config/wireless
-RUN echo '#!/bin/sh' > /etc/init.d/wireless
-RUN chmod +x /etc/init.d/wireless
+RUN echo '#!/bin/sh' > /etc/init.d/network
+RUN chmod +x /etc/init.d/network
 
 COPY router.wireless /usr/libexec/rpcd/router.wireless
 RUN chmod +x /usr/libexec/rpcd/router.wireless
