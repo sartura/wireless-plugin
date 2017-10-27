@@ -8,7 +8,7 @@
 #include "operational.h"
 #include "common.h"
 
-const char *YANG_MODEL = "wireless";
+const char *YANG_MODEL = "terastream-wireless";
 
 /* Configuration part of the plugin. */
 typedef struct sr_uci_mapping {
@@ -25,49 +25,49 @@ struct wireless_device {
 
 static sr_uci_link table_wireless[] = {
     /* wireless */
-    { 0, SR_STRING_T, "wireless.%s.type", "/wireless:devices/device[name='%s']/type"},
-    { 0, SR_STRING_T, "wireless.%s.country", "/wireless:devices/device[name='%s']/country"},
-    { 0, SR_STRING_T, "wireless.%s.band", "/wireless:devices/device[name='%s']/band"},
-    { 0, SR_INT32_T, "wireless.%s.bandwidth", "/wireless:devices/device[name='%s']/bandwidth"},
-    { 0, SR_INT32_T, "wireless.%s.scantimer", "/wireless:devices/device[name='%s']/scantimer"},
-    { 0, SR_INT32_T, "wireless.%s.wmm", "/wireless:devices/device[name='%s']/wmm"},
-    { 0, SR_INT32_T, "wireless.%s.wmm_noack",  "/wireless:devices/device[name='%s']/wmm_noack"},
-    { 0, SR_INT32_T, "wireless.%s.wmm_apsd","/wireless:devices/device[name='%s']/type" },
-    { 0, SR_INT32_T, "wireless.%s.txpower", "/wireless:devices/device[name='%s']/txpower"},
-    { 0, SR_STRING_T, "wireless.%s.rateset", "/wireless:devices/device[name='%s']/rateset"},
-    { 0, SR_INT32_T, "wireless.%s.frag", "/wireless:devices/device[name='%s']/frag"},
-    { 0, SR_INT32_T, "wireless.%s.rts", "/wireless:devices/device[name='%s']/rts"},
-    { 0, SR_INT32_T, "wireless.%s.dtim_period", "/wireless:devices/device[name='%s']/dtim_period"},
-    { 0, SR_INT32_T, "wireless.%s.beacon_int", "/wireless:devices/device[name='%s']/beacon_int"},
-    { 0, SR_INT32_T, "wireless.%s.rxchainps", "/wireless:devices/device[name='%s']/rxchainps"},
-    { 0, SR_INT32_T, "wireless.%s.rxchainps_qt", "/wireless:devices/device[name='%s']/rxchainps_qt"},
-    { 0, SR_INT32_T, "wireless.%s.rxchainps_pps", "/wireless:devices/device[name='%s']/rxchainps_pps"},
-    { 0, SR_INT32_T, "wireless.%s.rifs", "/wireless:devices/device[name='%s']/rifs"},
-    { 0, SR_INT32_T, "wireless.%s.rifs_advert", "/wireless:devices/device[name='%s']/rifs_advert"},
-    { 0, SR_INT32_T, "wireless.%s.maxassoc", "/wireless:devices/device[name='%s']/maxassoc"},
-    { 0, SR_INT32_T, "wireless.%s.beamforming", "/wireless:devices/device[name='%s']/beamforming"},
-    { 0, SR_INT32_T, "wireless.%s.doth", "/wireless:devices/device[name='%s']/doth"},
-    { 0, SR_INT32_T, "wireless.%s.dfsc", "/wireless:devices/device[name='%s']/dfsc"},
-    { 0, SR_STRING_T, "wireless.%s.channel", "/wireless:devices/device[name='%s']/channel"},
-    { 0, SR_INT32_T, "wireless.%s.disabled", "/wireless:devices/device[name='%s']/disabled"},
-    { 0, SR_STRING_T, "wireless.%s.hwmode", "/wireless:devices/device[name='%s']/hwmode"},
+    { 0, SR_STRING_T, "wireless.%s.type", "/terastream-wireless:devices/device[name='%s']/type"},
+    { 0, SR_STRING_T, "wireless.%s.country", "/terastream-wireless:devices/device[name='%s']/country"},
+    { 0, SR_STRING_T, "wireless.%s.band", "/terastream-wireless:devices/device[name='%s']/band"},
+    { 0, SR_INT32_T, "wireless.%s.bandwidth", "/terastream-wireless:devices/device[name='%s']/bandwidth"},
+    { 0, SR_INT32_T, "wireless.%s.scantimer", "/terastream-wireless:devices/device[name='%s']/scantimer"},
+    { 0, SR_INT32_T, "wireless.%s.wmm", "/terastream-wireless:devices/device[name='%s']/wmm"},
+    { 0, SR_INT32_T, "wireless.%s.wmm_noack",  "/terastream-wireless:devices/device[name='%s']/wmm_noack"},
+    { 0, SR_INT32_T, "wireless.%s.wmm_apsd","/terastream-wireless:devices/device[name='%s']/type" },
+    { 0, SR_INT32_T, "wireless.%s.txpower", "/terastream-wireless:devices/device[name='%s']/txpower"},
+    { 0, SR_STRING_T, "wireless.%s.rateset", "/terastream-wireless:devices/device[name='%s']/rateset"},
+    { 0, SR_INT32_T, "wireless.%s.frag", "/terastream-wireless:devices/device[name='%s']/frag"},
+    { 0, SR_INT32_T, "wireless.%s.rts", "/terastream-wireless:devices/device[name='%s']/rts"},
+    { 0, SR_INT32_T, "wireless.%s.dtim_period", "/terastream-wireless:devices/device[name='%s']/dtim_period"},
+    { 0, SR_INT32_T, "wireless.%s.beacon_int", "/terastream-wireless:devices/device[name='%s']/beacon_int"},
+    { 0, SR_INT32_T, "wireless.%s.rxchainps", "/terastream-wireless:devices/device[name='%s']/rxchainps"},
+    { 0, SR_INT32_T, "wireless.%s.rxchainps_qt", "/terastream-wireless:devices/device[name='%s']/rxchainps_qt"},
+    { 0, SR_INT32_T, "wireless.%s.rxchainps_pps", "/terastream-wireless:devices/device[name='%s']/rxchainps_pps"},
+    { 0, SR_INT32_T, "wireless.%s.rifs", "/terastream-wireless:devices/device[name='%s']/rifs"},
+    { 0, SR_INT32_T, "wireless.%s.rifs_advert", "/terastream-wireless:devices/device[name='%s']/rifs_advert"},
+    { 0, SR_INT32_T, "wireless.%s.maxassoc", "/terastream-wireless:devices/device[name='%s']/maxassoc"},
+    { 0, SR_INT32_T, "wireless.%s.beamforming", "/terastream-wireless:devices/device[name='%s']/beamforming"},
+    { 0, SR_INT32_T, "wireless.%s.doth", "/terastream-wireless:devices/device[name='%s']/doth"},
+    { 0, SR_INT32_T, "wireless.%s.dfsc", "/terastream-wireless:devices/device[name='%s']/dfsc"},
+    { 0, SR_STRING_T, "wireless.%s.channel", "/terastream-wireless:devices/device[name='%s']/channel"},
+    { 0, SR_INT32_T, "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/disabled"},
+    { 0, SR_STRING_T, "wireless.%s.hwmode", "/terastream-wireless:devices/device[name='%s']/hwmode"},
 };
 
 static sr_uci_link table_interface[] = {
-    { 0, SR_STRING_T, "wireless.%s.ssid", "/wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
-    { 0, SR_INT8_T,   "wireless.%s.disabled", "/wireless:devices/device[name='%s']/interface[name='%s']/disabled"},
-    { 0, SR_STRING_T, "wireless.%s.device", "/wireless:devices/device[name='%s']/interface[name='%s']/device"},
-    { 0, SR_STRING_T, "wireless.%s.network", "/wireless:devices/device[name='%s']/interface[name='%s']/network"},
-    { 0, SR_STRING_T, "wireless.%s.mode", "/wireless:devices/device[name='%s']/interface[name='%s']/mode"},
-    { 0, SR_STRING_T, "wireless.%s.encryption", "/wireless:devices/device[name='%s']/interface[name='%s']/encryption"},
-    { 0, SR_STRING_T, "wireless.%s.cipher", "/wireless:devices/device[name='%s']/interface[name='%s']/cipher"},
-    { 0, SR_STRING_T, "wireless.%s.key", "/wireless:devices/device[name='%s']/interface[name='%s']/key"},
-    { 0, SR_STRING_T, "wireless.%s.gtk_rekey", "/wireless:devices/device[name='%s']/interface[name='%s']/gtk_rekey"},
-    { 0, SR_STRING_T, "wireless.%s.macfilter", "/wireless:devices/device[name='%s']/interface[name='%s']/macfilter"},
-    { 0, SR_STRING_T, "wireless.%s.wps_pbc", "/wireless:devices/device[name='%s']/interface[name='%s']/wps_pbc"},
-    { 0, SR_STRING_T, "wireless.%s.wmf_bss_enable", "/wireless:devices/device[name='%s']/interface[name='%s']/wmf_bss_enable"},
-    { 0, SR_STRING_T, "wireless.%s.bss_max" , "/wireless:devices/device[name='%s']/interface[name='%s']/bss_max"},
-    { 0, SR_STRING_T, "wireless.%s.ifname", "/wireless:devices/device[name='%s']/interface[name='%s']/ifname"},
+    { 0, SR_STRING_T, "wireless.%s.ssid", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
+    { 0, SR_INT8_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/disabled"},
+    { 0, SR_STRING_T, "wireless.%s.device", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/device"},
+    { 0, SR_STRING_T, "wireless.%s.network", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/network"},
+    { 0, SR_STRING_T, "wireless.%s.mode", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/mode"},
+    { 0, SR_STRING_T, "wireless.%s.encryption", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/encryption"},
+    { 0, SR_STRING_T, "wireless.%s.cipher", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/cipher"},
+    { 0, SR_STRING_T, "wireless.%s.key", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/key"},
+    { 0, SR_STRING_T, "wireless.%s.gtk_rekey", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/gtk_rekey"},
+    { 0, SR_STRING_T, "wireless.%s.macfilter", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/macfilter"},
+    { 0, SR_STRING_T, "wireless.%s.wps_pbc", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/wps_pbc"},
+    { 0, SR_STRING_T, "wireless.%s.wmf_bss_enable", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/wmf_bss_enable"},
+    { 0, SR_STRING_T, "wireless.%s.bss_max" , "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/bss_max"},
+    { 0, SR_STRING_T, "wireless.%s.ifname", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ifname"},
 
 };
 
@@ -670,7 +670,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     SR_CHECK_RET(rc, error, "Error by sr_session_start: %s", sr_strerror(rc));
 
     rc = sync_datastores(ctx);
-    SR_CHECK_RET(rc, error, "Couldn't initialize wireless: %s", sr_strerror(rc));
+    SR_CHECK_RET(rc, error, "Couldn't initialize terastream-wireless: %s", sr_strerror(rc));
     /* Init wireless. */
 
     INF_MSG("sr_plugin_init_cb for wireless");
@@ -680,7 +680,7 @@ sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
     /* Operational data handling. */
     INF_MSG("Subscribing to operational");
-    rc = sr_dp_get_items_subscribe(session, "/wireless:devices-state", wireless_operational_cb, *private_ctx,
+    rc = sr_dp_get_items_subscribe(session, "/terastream-wireless:devices-state", wireless_operational_cb, *private_ctx,
                                    SR_SUBSCR_CTX_REUSE, &ctx->subscription);
     SR_CHECK_RET(rc, error, "Error by sr_dp_get_items_subscribe: %s", sr_strerror(rc));
 

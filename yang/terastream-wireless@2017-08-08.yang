@@ -1,8 +1,8 @@
-module wireless {
+module terastream-wireless {
 
-    namespace "urn:terastream:wireless";
+    namespace "urn:terastream:terastream-wireless";
 
-    prefix "terastream-wireless";
+    prefix "ts-ws";
 
     organization
         "Deutsche Telekom AG";

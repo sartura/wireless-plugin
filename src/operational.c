@@ -116,7 +116,7 @@ operstatus_channel_f(json_object *base, char *interface_name, struct list_head *
     struct json_object *t;
     const char *ubus_result;
     struct value_node *list_value;
-    char *fmt = "/wireless:devices-state/device[name='%s']/channel";
+    char *fmt = "/terastream-wireless:devices-state/device[name='%s']/channel";
     char xpath[MAX_XPATH];
 
     json_object_object_get_ex(base,
@@ -153,7 +153,7 @@ operstatus_encryption_f(json_object *base, char *interface_name, struct list_hea
     struct json_object *t;
     const char *ubus_result;
     struct value_node *list_value;
-    char *fmt = "/wireless:devices-state/device[name='%s']/encryption";
+    char *fmt = "/terastream-wireless:devices-state/device[name='%s']/encryption";
     char xpath[MAX_XPATH];
 
     json_object_object_get_ex(base,
@@ -191,7 +191,7 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     struct json_object *t;
     const char *ubus_result;
     struct value_node *list_value;
-    char *fmt = "/wireless:devices-state/device[name='%s']/ssid";
+    char *fmt = "/terastream-wireless:devices-state/device[name='%s']/ssid";
     char xpath[MAX_XPATH];
 
     json_object_object_get_ex(base,
@@ -229,7 +229,7 @@ operstatus_up_f(json_object *base, char *interface_name, struct list_head *list)
     struct json_object *t;
     const char *ubus_result;
     struct value_node *list_value;
-    char *fmt = "/wireless:devices-state/device[name='%s']/up";
+    char *fmt = "/terastream-wireless:devices-state/device[name='%s']/up";
     char xpath[MAX_XPATH];
 
     json_object_object_get_ex(base,
