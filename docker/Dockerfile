@@ -118,65 +118,65 @@ RUN \
 RUN \
        apt-get update && apt-get install -y \
        libjson0 \
-	   libjson0-dev \
-	   lua5.1-dev \
-	   lua5.1
+       libjson0-dev \
+       lua5.1-dev \
+       lua5.1
 
 # ubox
 RUN \
       cd /opt/dev && \
       git clone  git://git.openwrt.org/project/libubox.git && \
       cd libubox && mkdir build && cd build && \
-	  git checkout fd57eea9f37e447814afbf934db626288aac23c4 && \
-	  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" .. && \
-	  make -j2 && \
-	  make install
+      git checkout fd57eea9f37e447814afbf934db626288aac23c4 && \
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" .. && \
+      make -j2 && \
+      make install
 
 # uci
 RUN \
       cd /opt/dev && \
-	  git clone git://nbd.name/uci.git && \
-	  cd uci && \
-	  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DBUILD_LUA=OFF . && \
-	  make -j2 && \
-	  make install
+      git clone git://nbd.name/uci.git && \
+      cd uci && \
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DBUILD_LUA=OFF . && \
+      make -j2 && \
+      make install
 
 # ubus
 RUN \
       cd /opt/dev && \
       git clone https://git.openwrt.org/project/ubus.git && \
       cd ubus && \
-	  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DBUILD_LUA=OFF -DBUILD_EXAMPLES=OFF . && \
-	  make -j2 && \
-	  make install
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DBUILD_LUA=OFF -DBUILD_EXAMPLES=OFF . && \
+      make -j2 && \
+      make install
 
 # rpcd
 RUN \
       cd /opt/dev && \
       git clone https://git.openwrt.org/project/rpcd.git && \
       cd rpcd && \
-	  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DIWINFO_SUPPORT=NO . && \
-	  make -j2 && \
-	  make install && \
-	  mkdir /usr/lib/rpcd && \
-	  cp file.so /usr/lib/rpcd
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:String="Release" -DIWINFO_SUPPORT=NO . && \
+      make -j2 && \
+      make install && \
+      mkdir /usr/lib/rpcd && \
+      cp file.so /usr/lib/rpcd
 
 # wireless plugin
 RUN \
       cd /opt/dev && echo "test" && \
-	  git clone https://github.com/sartura/wireless-plugin.git && \
-	  cd wireless-plugin && mkdir build && cd build && \
-	  git checkout devel && \
-	  cmake .. && \
-	  make -j2 && \
-	  make install && \
-	  sysrepoctl -i -g ../yang/terastream-wireless@2017-08-08.yang
+      git clone https://github.com/sartura/wireless-plugin.git && \
+      cd wireless-plugin && mkdir build && cd build && \
+      git checkout devel && \
+      cmake .. && \
+      make -j2 && \
+      make install && \
+      sysrepoctl -i -g ../yang/terastream-wireless@2017-08-08.yang
 
 RUN \
       sysrepoctl -d tls-listen -m ietf-netconf-server && \
-	  sysrepoctl -d call-home -m ietf-netconf-server && \
-	  sysrepoctl -d tls-call-home -m ietf-netconf-server && \
-	  sysrepoctl -d ssh-call-home -m ietf-netconf-server
+      sysrepoctl -d call-home -m ietf-netconf-server && \
+      sysrepoctl -d tls-call-home -m ietf-netconf-server && \
+      sysrepoctl -d ssh-call-home -m ietf-netconf-server
 
 ENV EDITOR vim
 EXPOSE 830

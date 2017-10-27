@@ -15,7 +15,7 @@ $ docker run -i -t --name sysrepo2 -p 830:830 --rm sysrepo/sysrepo-netopeer2:wir
 ## run dockerfile without supervisor
 
 ```
-$ docker run -i -t --name sysrepo -p 830:830 --rm sysrepo/sysrepo-netopeer2:wireless bash
+$ docker run -v /opt/yang:/opt/fork -i -t --name wireless_plugin --rm sysrepo/sysrepo-netopeer2:wireless bash
 $ ubusd &
 $ rpcd &
 $ sysrepod
