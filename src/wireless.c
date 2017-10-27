@@ -55,7 +55,7 @@ static sr_uci_link table_wireless[] = {
 
 static sr_uci_link table_interface[] = {
     { 0, SR_STRING_T, "wireless.%s.ssid", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
-    { 0, SR_INT8_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/disabled"},
+    { "false", SR_BOOL_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/disabled"},
     { 0, SR_STRING_T, "wireless.%s.device", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/device"},
     { 0, SR_STRING_T, "wireless.%s.network", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/network"},
     { 0, SR_STRING_T, "wireless.%s.mode", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/mode"},
@@ -77,6 +77,58 @@ static oper_mapping table_operational[] = {
     { "encryption", operational_encryption },
     { "up", operational_up },
 };
+
+char *
+transform_sysrepo_value(sr_val_t *value)
+{
+    char *result = NULL;
+
+    if (SR_BOOL_T == value->type) {
+        if (value->data.bool_val) {
+            result = strdup("1");
+        } else {
+            result = strdup("0");
+        }
+    } else {
+        result = sr_val_to_str(value);
+    }
+
+    return result;
+}
+
+void
+transform_default_value(sr_uci_link *map, char **uci_val)
+{
+    if (0 == strlen(*uci_val) && NULL != map->default_value) {
+        strcpy(*uci_val, map->default_value);
+    }
+}
+
+void
+transform_bool_value(sr_uci_link *map, char **uci_val)
+{
+    if (SR_BOOL_T != map->default_value_type) {
+        return;
+    }
+
+    if (0 == strncmp("0", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("off", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("no", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("false", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("1", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("on", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("yes", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("true", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    }
+}
 
 /* Update UCI configuration given ucipath and some string value. */
 static int set_uci_item(struct uci_context *uctx, char *ucipath, char *value);
@@ -233,7 +285,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         key = get_key_value(new_val->xpath, 1);
         snprintf(ucipath, XPATH_MAX_LEN, "wireless.%s.%s", key, option);
         if(key) free(key);
-        mem = sr_val_to_str(new_val);
+        mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);
@@ -244,7 +296,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         key = get_key_value(new_val->xpath, 0);
         snprintf(ucipath, XPATH_MAX_LEN, "wireless.%s.%s", key, option);
         if(key) free(key);
-        mem = sr_val_to_str(new_val);
+        mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);
@@ -429,15 +481,16 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 snprintf(ucipath, MAX_UCI_PATH, table_interface[i].ucipath, name);
                 rc = get_uci_item(pctx->uctx, ucipath, &uci_val);
                 if (UCI_ERR_NOTFOUND == rc) {
-                    char tmp[MAX_UCI_PATH];
-                    snprintf(tmp, MAX_UCI_PATH, "wireless.%s.disabled", name);
-                    /* if disabled option not present set it to true manually */
-                    if (0 == strncmp(tmp, ucipath, strlen(ucipath))) {
-                        rc = sr_set_item_str(session, xpath, "0", SR_EDIT_DEFAULT);
-                        SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, "0");
+                    // check if default values exist
+                    if (NULL != table_interface[i].default_value) {
+                        strcpy(uci_val,"");
+                        rc = UCI_OK;
+                    } else {
+                        continue;
                     }
-                    continue;
                 }
+                transform_default_value(&table_interface[i], &uci_val);
+                transform_bool_value(&table_interface[i], &uci_val);
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
