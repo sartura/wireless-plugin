@@ -149,7 +149,7 @@ module wireless {
 				}
                 description
                  "enable/disable the interface";
-                default 1;
+                default 0;
             }
 
             leaf name {
