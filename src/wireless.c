@@ -410,7 +410,6 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 }
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
                 /* INF("Setting device %s to %s", xpath, uci_val); */
-                INF("%s -> %s", xpath, uci_val);
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
                 free(uci_val);
@@ -430,10 +429,14 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 snprintf(ucipath, MAX_UCI_PATH, table_interface[i].ucipath, name);
                 rc = get_uci_item(pctx->uctx, ucipath, &uci_val);
                 if (UCI_ERR_NOTFOUND == rc) {
+                    /* if disabled option not present set it to true manually */
+                    if (0 == strncmp("disabled", name, strlen(name))) {
+                        rc = sr_set_item_str(session, xpath, "1", SR_EDIT_DEFAULT);
+                        SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, "1");
+                    }
                     continue;
                 }
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
-                INF("%s -> %s", xpath, uci_val);
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
             }
