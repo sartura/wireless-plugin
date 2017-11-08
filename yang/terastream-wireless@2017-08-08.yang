@@ -128,7 +128,10 @@ module terastream-wireless {
         }
 
         leaf disabled {
-             type int32;
+             type boolean;
+             description
+              "enable/disable the interface";
+             default false;
         }
 
         leaf hwmode {

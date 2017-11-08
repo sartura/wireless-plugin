@@ -49,7 +49,7 @@ static sr_uci_link table_wireless[] = {
     { 0, SR_INT32_T, "wireless.%s.doth", "/terastream-wireless:devices/device[name='%s']/doth"},
     { 0, SR_INT32_T, "wireless.%s.dfsc", "/terastream-wireless:devices/device[name='%s']/dfsc"},
     { 0, SR_STRING_T, "wireless.%s.channel", "/terastream-wireless:devices/device[name='%s']/channel"},
-    { 0, SR_INT32_T, "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/disabled"},
+    { "false", SR_BOOL_T, "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/disabled"},
     { 0, SR_STRING_T, "wireless.%s.hwmode", "/terastream-wireless:devices/device[name='%s']/hwmode"},
 };
 
@@ -451,21 +451,27 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
 
         if (strcmp("wifi-device", type) == 0) {
             INF("uci name type %s %s", name, type);
+            char *uci_val = calloc(1, 100);
             for (size_t i = 0; i < ARR_SIZE(table_wireless); i++) {
-                char *uci_val = calloc(1, 100);
-
                 snprintf(xpath, XPATH_MAX_LEN, table_wireless[i].xpath, name);
                 snprintf(ucipath, MAX_UCI_PATH, table_wireless[i].ucipath, name);
                 rc = get_uci_item(pctx->uctx, ucipath, &uci_val);
                 if (UCI_ERR_NOTFOUND == rc) {
-                    continue;
+                    // check if default values exist
+                    if (NULL != table_wireless[i].default_value) {
+                        strcpy(uci_val,"");
+                        rc = UCI_OK;
+                    } else {
+                        continue;
+                    }
                 }
+                transform_default_value(&table_wireless[i], &uci_val);
+                transform_bool_value(&table_wireless[i], &uci_val);
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
-                /* INF("Setting device %s to %s", xpath, uci_val); */
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
-                free(uci_val);
             }
+            free(uci_val);
         }
 
         if (strcmp("wifi-iface", type) == 0) {
