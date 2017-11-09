@@ -1,6 +1,6 @@
 module terastream-wireless {
 
-    namespace "urn:terastream:terastream-wireless";
+    namespace "http://terastrm.net/ns/yang/terastream-wireless";
 
     prefix "ts-ws";
 
