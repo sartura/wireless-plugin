@@ -127,11 +127,11 @@ module terastream-wireless {
              type string;
         }
 
-        leaf disabled {
+        leaf enabled {
              type boolean;
              description
               "enable/disable the interface";
-             default false;
+             default true;
         }
 
         leaf hwmode {
@@ -146,11 +146,11 @@ module terastream-wireless {
 
             unique "index";
 
-            leaf disabled {
+            leaf enabled {
                 type boolean;
                 description
                  "enable/disable the interface";
-                default false;
+                default true;
             }
 
             leaf name {

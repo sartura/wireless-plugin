@@ -49,13 +49,13 @@ static sr_uci_link table_wireless[] = {
     { 0, SR_INT32_T, "wireless.%s.doth", "/terastream-wireless:devices/device[name='%s']/doth"},
     { 0, SR_INT32_T, "wireless.%s.dfsc", "/terastream-wireless:devices/device[name='%s']/dfsc"},
     { 0, SR_STRING_T, "wireless.%s.channel", "/terastream-wireless:devices/device[name='%s']/channel"},
-    { "false", SR_BOOL_T, "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/disabled"},
+    { "false", SR_BOOL_T, "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/enabled"},
     { 0, SR_STRING_T, "wireless.%s.hwmode", "/terastream-wireless:devices/device[name='%s']/hwmode"},
 };
 
 static sr_uci_link table_interface[] = {
     { 0, SR_STRING_T, "wireless.%s.ssid", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
-    { "false", SR_BOOL_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/disabled"},
+    { "false", SR_BOOL_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/enabled"},
     { 0, SR_STRING_T, "wireless.%s.device", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/device"},
     { 0, SR_STRING_T, "wireless.%s.network", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/network"},
     { 0, SR_STRING_T, "wireless.%s.mode", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/mode"},
@@ -85,9 +85,9 @@ transform_sysrepo_value(sr_val_t *value)
 
     if (SR_BOOL_T == value->type) {
         if (value->data.bool_val) {
-            result = strdup("1");
-        } else {
             result = strdup("0");
+        } else {
+            result = strdup("1");
         }
     } else {
         result = sr_val_to_str(value);
@@ -112,21 +112,21 @@ transform_bool_value(sr_uci_link *map, char **uci_val)
     }
 
     if (0 == strncmp("0", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "false");
+        strcpy(*uci_val, "true");
     } else if (0 == strncmp("off", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "false");
+        strcpy(*uci_val, "true");
     } else if (0 == strncmp("no", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "false");
+        strcpy(*uci_val, "true");
     } else if (0 == strncmp("false", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "false");
+        strcpy(*uci_val, "true");
     } else if (0 == strncmp("1", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "true");
+        strcpy(*uci_val, "false");
     } else if (0 == strncmp("on", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "true");
+        strcpy(*uci_val, "false");
     } else if (0 == strncmp("yes", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "true");
+        strcpy(*uci_val, "false");
     } else if (0 == strncmp("true", *uci_val, strlen(*uci_val))) {
-        strcpy(*uci_val, "true");
+        strcpy(*uci_val, "false");
     }
 }
 
@@ -163,8 +163,7 @@ val_has_data(sr_type_t type) {
     }
 }
 
-static char *
-get_key_value(char *orig_xpath, int n)
+static char *get_key_value(char *orig_xpath, int n)
 {
     char *key = NULL, *node = NULL;
     sr_xpath_ctx_t state = {0, 0, 0, 0};
@@ -177,7 +176,8 @@ get_key_value(char *orig_xpath, int n)
     while (true) {
         key = sr_xpath_next_key_name(NULL, &state);
         if (NULL != key) {
-            if (counter++ != n) continue;
+            if (counter++ != n)
+                continue;
             key = strdup(sr_xpath_next_key_value(NULL, &state));
             break;
         }
@@ -268,39 +268,50 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
 {
     char ucipath[MAX_UCI_PATH];
     char *mem = NULL;
-    char *key = NULL;
+    char *key1 = NULL;
+    char *key2 = NULL;
     int rc = SR_ERR_OK;
+    char xpath[XPATH_MAX_LEN];
 
     //TODO handle deletion of interfaces
     if (false == val_has_data(new_val->type)) {
         return SR_ERR_OK;
     }
 
-    sr_xpath_ctx_t state = {0,0,0,0};
-    char *option = sr_xpath_last_node(new_val->xpath, &state);
-    sr_xpath_recover(&state);
+    key1 = get_key_value(new_val->xpath, 0);
+    key2 = get_key_value(new_val->xpath, 1);
 
     if (strstr(new_val->xpath, "interface")) {
         /* handle interface  */
-        key = get_key_value(new_val->xpath, 1);
-        snprintf(ucipath, XPATH_MAX_LEN, "wireless.%s.%s", key, option);
-        if(key) free(key);
+        for (size_t i = 0; i < ARR_SIZE(table_interface); i++) {
+            snprintf(xpath, XPATH_MAX_LEN, table_interface[i].xpath, key1, key2);
+            if (0 == strcmp(new_val->xpath, xpath)) {
+                snprintf(ucipath, MAX_UCI_PATH, table_interface[i].ucipath, key2);
+            }
+        }
         mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
-        if(mem) free(mem);
+        if (mem)
+            free(mem);
     }
 
     if (strstr(new_val->xpath, "device")) {
         /* handle device  */
-        key = get_key_value(new_val->xpath, 0);
-        snprintf(ucipath, XPATH_MAX_LEN, "wireless.%s.%s", key, option);
-        if(key) free(key);
+        for (size_t i = 0; i < ARR_SIZE(table_wireless); i++) {
+            snprintf(xpath, XPATH_MAX_LEN, table_wireless[i].xpath, key1);
+            if (0 == strcmp(new_val->xpath, xpath)) {
+                snprintf(ucipath, MAX_UCI_PATH, table_wireless[i].ucipath, key1);
+            }
+        }
         mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);
     }
+
+	if (key1) free(key1);
+	if (key2) free(key2);
 
     return rc;
   uci_error:

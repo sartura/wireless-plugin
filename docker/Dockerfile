@@ -166,7 +166,7 @@ RUN \
       cd /opt/dev && echo "test" && \
       git clone https://github.com/sartura/wireless-plugin.git && \
       cd wireless-plugin && mkdir build && cd build && \
-      git checkout devel && \
+      git checkout master && \
       cmake .. && \
       make -j2 && \
       make install && \
