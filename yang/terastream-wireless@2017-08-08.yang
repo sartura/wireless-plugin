@@ -18,6 +18,36 @@ module terastream-wireless {
             "Version 0.1.0 -- Initial version.";
     }
 
+    container "apsteering" {
+      description
+        "apsteering.";
+
+      leaf enabled {
+           type boolean;
+           description
+            "enable/disable apstreering";
+           default false;
+      }
+    }
+
+    container "bandsteering" {
+      description
+        "bandsteering.";
+
+      leaf enabled {
+           type boolean;
+           description
+            "enable/disable bandstreering";
+           default false;
+      }
+
+      leaf policy {
+           type boolean;
+           description
+            "enable/disable policy for bandsteering";
+           default false;
+      }
+    }
 
     container "devices" {
       description
@@ -151,6 +181,13 @@ module terastream-wireless {
                 description
                  "enable/disable the interface";
                 default true;
+            }
+
+            leaf hidden {
+                 type boolean;
+                 description
+                  "Turns off SSID broadcasting if set to";
+                 default false;
             }
 
             leaf name {

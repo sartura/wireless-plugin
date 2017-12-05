@@ -56,6 +56,7 @@ static sr_uci_link table_wireless[] = {
 static sr_uci_link table_interface[] = {
     { 0, SR_STRING_T, "wireless.%s.ssid", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ssid"},
     { "false", SR_BOOL_T,   "wireless.%s.disabled", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/enabled"},
+    { "false", SR_BOOL_T,   "wireless.%s.hidden", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/hidden"},
     { 0, SR_STRING_T, "wireless.%s.device", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/device"},
     { 0, SR_STRING_T, "wireless.%s.network", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/network"},
     { 0, SR_STRING_T, "wireless.%s.mode", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/mode"},
@@ -68,6 +69,12 @@ static sr_uci_link table_interface[] = {
     { 0, SR_STRING_T, "wireless.%s.wmf_bss_enable", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/wmf_bss_enable"},
     { 0, SR_STRING_T, "wireless.%s.bss_max" , "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/bss_max"},
     { 0, SR_STRING_T, "wireless.%s.ifname", "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/ifname"},
+};
+
+static sr_uci_link steering[] = {
+    { "false", SR_BOOL_T, "wireless.apsteering.enabled", "/terastream-wireless:apsteering/enabled"},
+    { "false", SR_BOOL_T, "wireless.bandsteering.enabled", "/terastream-wireless:bandsteering/policy"},
+    { "false", SR_BOOL_T, "wireless.bansteering.policy", "/terastream-wireless:bandsteering/policy"},
 
 };
 
@@ -77,6 +84,24 @@ static oper_mapping table_operational[] = {
     { "encryption", operational_encryption },
     { "up", operational_up },
 };
+
+char *
+transform_orig_sysrepo_value(sr_val_t *value)
+{
+    char *result = NULL;
+
+    if (SR_BOOL_T == value->type) {
+        if (value->data.bool_val) {
+            result = strdup("1");
+        } else {
+            result = strdup("0");
+        }
+    } else {
+        result = sr_val_to_str(value);
+    }
+
+    return result;
+}
 
 char *
 transform_sysrepo_value(sr_val_t *value)
@@ -101,6 +126,32 @@ transform_default_value(sr_uci_link *map, char **uci_val)
 {
     if (0 == strlen(*uci_val) && NULL != map->default_value) {
         strcpy(*uci_val, map->default_value);
+    }
+}
+
+void
+transform_orig_bool_value(sr_uci_link *map, char **uci_val)
+{
+    if (SR_BOOL_T != map->default_value_type) {
+        return;
+    }
+
+    if (0 == strncmp("0", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("off", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("no", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("false", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "false");
+    } else if (0 == strncmp("1", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("on", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("yes", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
+    } else if (0 == strncmp("true", *uci_val, strlen(*uci_val))) {
+        strcpy(*uci_val, "true");
     }
 }
 
@@ -291,12 +342,10 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         }
         mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
-        UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
+        UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if (mem)
             free(mem);
-    }
-
-    if (strstr(new_val->xpath, "device")) {
+    } else if (strstr(new_val->xpath, "device")) {
         /* handle device  */
         for (size_t i = 0; i < ARR_SIZE(table_wireless); i++) {
             snprintf(xpath, XPATH_MAX_LEN, table_wireless[i].xpath, key1);
@@ -306,9 +355,23 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         }
         mem = transform_sysrepo_value(new_val);
         rc = set_uci_item(uctx, ucipath, mem);
-        UCI_CHECK_RET(rc, uci_error, "get_uci_item %s", sr_strerror(rc));
+        UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);
     }
+
+    if (strstr(new_val->xpath, "steering")) {
+        /* handle device  */
+        for (size_t i = 0; i < ARR_SIZE(steering); i++) {
+            snprintf(xpath, XPATH_MAX_LEN, steering[i].xpath, key1);
+            if (0 == strcmp(new_val->xpath, xpath)) {
+                snprintf(ucipath, MAX_UCI_PATH, steering[i].ucipath, key1);
+            }
+        }
+        mem = transform_orig_sysrepo_value(new_val);
+        rc = set_uci_item(uctx, ucipath, mem);
+        UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
+        if(mem) free(mem);
+	}
 
 	if (key1) free(key1);
 	if (key2) free(key2);
@@ -384,6 +447,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     if (SR_EV_APPLY == event) {
         rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
         INF("\n\n ========== CONFIG HAS CHANGED: %s ==========\n\n", module_name);
+		return rc;
     }
 
     snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name);
@@ -483,9 +547,7 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
             }
             free(uci_val);
-        }
-
-        if (strcmp("wifi-iface", type) == 0) {
+        } else if (strcmp("wifi-iface", type) == 0) {
             char *uci_val = calloc(1, 100);
             char *device = calloc(1, 100);
             snprintf(ucipath, MAX_UCI_PATH, "wireless.%s.device", name);
@@ -508,6 +570,30 @@ init_sysrepo_data(struct plugin_ctx *pctx, sr_session_ctx_t *session)
                 }
                 transform_default_value(&table_interface[i], &uci_val);
                 transform_bool_value(&table_interface[i], &uci_val);
+                SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
+                rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
+                SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
+            }
+            free(uci_val);
+            free(device);
+        } else if (strcmp("bandsteering", type) == 0 || strcmp("apsteering", type) == 0) {
+            char *uci_val = calloc(1, 100);
+            char *device = calloc(1, 100);
+            for (size_t i = 0; i < ARR_SIZE(steering); i++) {
+                snprintf(xpath, XPATH_MAX_LEN, steering[i].xpath, device, name);
+                snprintf(ucipath, MAX_UCI_PATH, steering[i].ucipath, name);
+                rc = get_uci_item(pctx->uctx, ucipath, &uci_val);
+                if (UCI_ERR_NOTFOUND == rc) {
+                    // check if default values exist
+                    if (NULL != steering[i].default_value) {
+                        strcpy(uci_val,"");
+                        rc = UCI_OK;
+                    } else {
+                        continue;
+                    }
+                }
+                transform_default_value(&steering[i], &uci_val);
+                transform_orig_bool_value(&steering[i], &uci_val);
                 SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
                 rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
                 SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath, uci_val);
