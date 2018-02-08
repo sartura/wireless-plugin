@@ -395,7 +395,7 @@ module terastream-wireless {
             leaf hidden {
                  type boolean;
                  description
-                  "Turns off SSID broadcasting if set to";
+                  "Turns off SSID broadcasting if set to true";
                  default false;
             }
 
