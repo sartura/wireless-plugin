@@ -25,8 +25,42 @@ module terastream-wireless {
       leaf enabled {
            type boolean;
            description
-            "enable/disable apstreering";
+            "Enable AP Steering mechanism";
            default false;
+      }
+
+      leaf monitor_interval {
+           type int32;
+           description
+            "The interval to monitor the RSSI value of stations, unit: seconds";
+           default 10;
+      }
+
+      leaf rssi_threshold {
+           type int8 {
+               range "-100 .. 0";
+           }
+           description
+            "Station is disassociated if its RSSI falls below the threshold value (given that another Wi-Fi AP is detected in the network)";
+           default -80;
+      }
+
+      leaf reassoc_timer {
+           type uint32 {
+               range "1 .. max";
+           }
+           description
+            "If the disassociated station comes back within the given amount of seconds, do not disassociate again until the retry_interval times out.";
+           default 5;
+      }
+
+      leaf retry_interval {
+           type uint32 {
+               range "60 .. max";
+           }
+           description
+            "The time which as to pass to disassociate a station again";
+           default 3600;
       }
     }
 
@@ -35,17 +69,33 @@ module terastream-wireless {
         "bandsteering.";
 
       leaf enabled {
-           type boolean;
            description
-            "enable/disable bandstreering";
+            "Enable Band Steering mechanism";
+           type boolean;
            default false;
       }
 
       leaf policy {
-           type boolean;
            description
-            "enable/disable policy for bandsteering";
+            "Band Steering policy: False: RSSI, True: Bandwidth Usage";
+           type boolean;
            default false;
+      }
+      leaf rssi_threshold {
+           description
+            "Dualband station is steered to 2.4GHz radio when its RSSI falls below the threshold value";
+           type int8 {
+               range "-100 .. 0";
+           }
+           default -75;
+      }
+      leaf bw_util {
+           description
+            "Inactive dualband station are steered to 2.4GHz radio when the bandwidth usage on 5GHz band reaches the given bandwidth utilization value";
+           type uint8 {
+               range "0 .. 100";
+           }
+           default 60;
       }
     }
 
@@ -67,94 +117,124 @@ module terastream-wireless {
 
         leaf country {
              type string;
+             default "EU/13";
         }
 
         leaf band {
              type string;
+             //TODO range a, b
+             default "b";
         }
 
         leaf bandwidth {
-             type int32;
+             type uint8 {
+                 range "20 | 40 | 80";
+             }
+             default 80;
+        }
+
+        leaf channel {
+             type string {
+                 pattern "(auto|1|2|3|4|5|6|7|8|9|10|11|12|13|36|40|44|48)";
+             }
+             default "auto";
+        }
+
+        leaf obss_coex {
+             type boolean;
+             default "true";
         }
 
         leaf scantimer {
              type int32;
+             default 0;
         }
 
         leaf wmm  {
-             type int32;
+             type boolean;
+             default "true";
         }
 
         leaf wmm_noack {
-             type int32;
+             type boolean;
+             default "false";
         }
 
         leaf wmm_apsd {
-             type int32;
+             type boolean;
+             default "true";
         }
 
         leaf txpower {
              type int32;
+             default 100;
         }
 
         leaf rateset {
-             type string;
+             type string {
+                 pattern "(default)";
+             }
+             default "default";
         }
 
         leaf frag {
              type int32;
+             default 2346;
         }
 
         leaf rts {
              type int32;
+             default 2347;
         }
         
         leaf dtim_period {
              type int32;
+             default 1;
         }
         
         leaf beacon_int {
              type int32;
+             default 100;
         }
         
         leaf rxchainps {
-             type int32;
+             type boolean;
+             default "true";
         }
 
         leaf rxchainps_qt {
              type int32;
+             default 10;
         }
 
         leaf rxchainps_pps {
              type int32;
+             default 10;
         }
 
         leaf rifs {
-             type int32;
+             type boolean;
+             default "false";
         }
 
         leaf rifs_advert {
-             type int32;
+             type boolean;
+             default "true";
         }
 
         leaf maxassoc {
              type int32;
-        }
-
-        leaf beamforming {
-             type int32;
-        }
-
-        leaf doth {
-             type int32;
+             default 32;
         }
 
         leaf dfsc {
-             type int32;
+             type boolean;
+             default "true";
         }
 
-        leaf channel {
+        leaf hwmode {
              type string;
+             default "auto";
         }
 
         leaf enabled {
@@ -164,8 +244,23 @@ module terastream-wireless {
              default true;
         }
 
-        leaf hwmode {
-             type string;
+        leaf frameburst {
+             type boolean;
+             default "false";
+        }
+
+        leaf beamforming {
+             type boolean;
+             default "false";
+        }
+
+        leaf atf {
+             type boolean;
+             default "false";
+        }
+
+        leaf doth {
+             type int32;
         }
 
         list interface {
@@ -174,13 +269,127 @@ module terastream-wireless {
             description
               "List of configured interfaces on device";
 
-            unique "index";
+            leaf name {
+                type string;
+                description
+                 "Name of the uci config section. This is autogenerated by SWIG if it doesn't exist";
+            }
+
+            leaf device {
+                 type string;
+            }
+
+            leaf ifname {
+                 type string;
+            }
+
+            leaf network {
+                 type string;
+            }
+
+            leaf mode {
+                 type string;
+                 default "ap";
+            }
+
+            leaf ssid {
+                 type string;
+            }
+
+            leaf encryption {
+                 type string;
+                 default "none";
+            }
+
+            leaf cipher {
+                 type string;
+                 default "none";
+            }
+
+            leaf key {
+                 type string;
+            }
+
+            leaf key_index {
+                 type int32;
+                 default 1;
+            }
+
+            leaf key1 {
+                 type string;
+            }
+
+            leaf key2 {
+                 type string;
+            }
+
+            leaf key3 {
+                 type string;
+            }
+
+            leaf key4 {
+                 type string;
+            }
+
+            leaf radius_server {
+                 type string;
+            }
+
+            leaf radius_port {
+                 type string;
+            }
+
+            leaf radius_secret {
+                 type string;
+            }
+
+            leaf gtk_rekey {
+                 type int32;
+                 default 3600;
+            }
+
+            leaf net_reauth {
+                 type int32;
+                 default 36000;
+            }
+
+            leaf wps_pbc {
+                 type boolean;
+                 default "false";
+            }
+
+            leaf wmf_bss_enable {
+                 type boolean;
+                 default "false";
+            }
+
+            leaf bss_max {
+                 type uint8 {
+                     range "0 .. 128";
+                 }
+                 default 32;
+            }
+
+            leaf closed {
+                 type boolean;
+                 default "false";
+            }
+
+            leaf isolate {
+                 type boolean;
+                 default "false";
+            }
 
             leaf enabled {
                 type boolean;
                 description
                  "enable/disable the interface";
                 default true;
+            }
+
+            leaf macfilter {
+                 type int32;
+                 default 0;
             }
 
             leaf hidden {
@@ -190,68 +399,7 @@ module terastream-wireless {
                  default false;
             }
 
-            leaf name {
-                type string;
-                description
-                 "Name of the uci config section";
-            }
-
-            leaf device {
-                 type string;
-            }
-
-            leaf index {
-                 type int32;
-            }
-
-            leaf network {
-                 type string;
-            }
-
-            leaf mode {
-                 type string;
-            }
-
-            leaf ssid {
-                 type string;
-            }
-
-            leaf encryption {
-                 type string;
-            }
-
-            leaf cipher {
-                 type string;
-            }
-
-            leaf key {
-                 type string;
-            }
-
-            leaf gtk_rekey {
-                 type string;
-            }
-
-            leaf macfilter {
-                 type string;
-            }
-
-            leaf wps_pbc {
-                 type string;
-            }
-
-            leaf wmf_bss_enable {
-                 type string;
-            }
-
-            leaf bss_max {
-                 type string;
-            }
-
-            leaf ifname {
-                 type string;
-            }
-
+            //TODO leaf-list maclist;
           }
       }
     }
