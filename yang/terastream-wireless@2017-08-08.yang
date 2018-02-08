@@ -4,6 +4,10 @@ module terastream-wireless {
 
     prefix "ts-ws";
 
+    import ietf-yang-types {
+      prefix yang;
+    }
+
     organization
         "Deutsche Telekom AG";
 
@@ -316,50 +320,87 @@ module terastream-wireless {
             }
 
             leaf encryption {
-                 type string;
+                 description
+                  "Wireless encryption method";
+                 type enumeration {
+                     enum "none";      // None
+                     enum "wep-open";  // WEP
+                     enum "psk2";      // WPA2 Personal (PSK)
+                     enum "mixed-psk"; // WPA/WPA2 Personal (PSK) Mixed Mode
+                     enum "wpa2";      // WPA2 Enterprise
+                     enum "wpa-mixed"; // WPA/WPA2 Enterprise Mixed Mode
+                 }
                  default "none";
             }
 
             leaf cipher {
-                 type string;
-                 default "none";
+                 when "../encryption = 'psk2' or ../encryption = 'mixed-psk'";
+                 type enumeration {
+                     enum "auto";
+                     enum "ccmp";
+                     enum "tkip+ccmp";
+                 }
+                 default "auto";
             }
 
             leaf key {
-                 type string;
+                 when "../encryption = 'psk2'";
+                 type string {
+                     length "8 .. 63";
+                 }
             }
 
             leaf key_index {
-                 type int32;
+                 when "../encryption = 'wep-open'";
+                 type uint8 {
+                     range "1 .. 4";
+                 }
                  default 1;
             }
 
             leaf key1 {
-                 type string;
+                 when "../encryption = 'wep-open'";
+                 type yang:hex-string {
+                     length "10..26";
+                 }
             }
 
             leaf key2 {
-                 type string;
+                 when "../encryption = 'wep-open'";
+                 type yang:hex-string {
+                     length "10..26";
+                 }
             }
 
             leaf key3 {
-                 type string;
+                 when "../encryption = 'wep-open'";
+                 type yang:hex-string {
+                     length "10..26";
+                 }
             }
 
             leaf key4 {
-                 type string;
+                 when "../encryption = 'wep-open'";
+                 type yang:hex-string {
+                     length "10..26";
+                 }
             }
 
             leaf radius_server {
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
                  type string;
             }
 
             leaf radius_port {
-                 type string;
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
+                 type uint16 {
+                     range "1 .. 65535";
+                 }
             }
 
             leaf radius_secret {
-                 type string;
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
+                 type int32;
             }
 
             leaf gtk_rekey {
