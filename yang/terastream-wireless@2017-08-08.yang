@@ -336,9 +336,9 @@ module terastream-wireless {
             leaf cipher {
                  when "../encryption = 'psk2' or ../encryption = 'mixed-psk'";
                  type enumeration {
-                     enum "auto";
-                     enum "ccmp";
-                     enum "tkip+ccmp";
+                     enum "auto";      // Auto
+                     enum "ccmp";      // CCMP (AES)
+                     enum "tkip+ccmp"; // TKIP/CCMP (AES)
                  }
                  default "auto";
             }
