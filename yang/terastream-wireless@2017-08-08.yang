@@ -341,13 +341,15 @@ module terastream-wireless {
                  default "none";
             }
 
-            /* combination of encryption = psk2 and cipher = tkip+ccmp is not allowed
-               which is not covered by the cipher's when statement
-             */
-            must "encryption != 'psk2' or (encryption = 'psk2' and cipher != 'tkip+ccmp')";
+            must "(encryption = 'psk-psk2' and (cipher = 'auto' or cipher = 'ccmp' or cipher = 'tkip+ccmp')) or " +
+                 "(encryption = 'psk2'     and (cipher = 'auto' or cipher = 'ccmp')) or " +
+                 "(encryption = 'wep-open') or " +
+                 "(encryption = 'wpa2') or " +
+                 "(encryption = 'wpa-wpa2') or " +
+                 "(encryption = 'none')";
 
             leaf cipher {
-                 when "../encryption = 'psk2' or ../encryption = 'psk-psk2'";
+                 when "../encryption != 'none' and ../encryption != 'wep-open' and ../encryption != 'wpa2' and ../encryption != 'wpa-wpa2'";
                  type enumeration {
                      enum "auto";      // Auto
                      enum "ccmp";      // CCMP (AES)
