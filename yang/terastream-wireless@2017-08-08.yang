@@ -493,7 +493,7 @@ module terastream-wireless {
         }
 
         leaf channel {
-          type channel-type;
+          type string;
         }
 
         leaf ssid {
@@ -501,7 +501,7 @@ module terastream-wireless {
         }
 
         leaf encryption {
-          type encryption-type;
+          type string;
         }
 
         leaf up {
