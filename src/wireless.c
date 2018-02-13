@@ -125,7 +125,7 @@ transform_orig_sysrepo_value(sr_val_t *value)
 }
 
 char *
-transform_sysrepo_value(sr_val_t *value)
+transform_sysrepo_value(char *ucipath, sr_val_t *value)
 {
     char *result = NULL;
 
@@ -136,7 +136,19 @@ transform_sysrepo_value(sr_val_t *value)
             result = strdup("1");
         }
     } else {
-        result = sr_val_to_str(value);
+        /* transform encryption value
+         * psk-psk2 to mixed-psk
+         * wpa-wpa2 to wpa-mixed
+         * */
+        if (strstr(ucipath, "encryption")) {
+            if (0 == strcmp(value->data.string_val, "psk-psk2")) {
+                result = strdup("mixed-psk");
+            } else if (0 == strcmp(value->data.string_val, "wpa-wpa2")) {
+                result = strdup("wpa-mixed");
+            }
+        } else {
+            result = sr_val_to_str(value);
+        }
     }
 
     return result;
@@ -147,6 +159,20 @@ transform_default_value(sr_uci_link *map, char **uci_val)
 {
     if (0 == strlen(*uci_val) && NULL != map->default_value) {
         strcpy(*uci_val, map->default_value);
+    }
+
+    /* transform encryption value
+     * mixed-psk to psk-psk2
+     * wpa-mixed to wpa-wpa2
+     * */
+    if (strstr(map->ucipath, "encryption")) {
+        INF_MSG("IN encryption\n\n");
+        if (0 == strcmp(*uci_val, "mixed-psk")) {
+         INF_MSG("IN MIXED\n\n");
+            strcpy(*uci_val, "psk-psk2");
+        } else if (0 == strcmp(*uci_val, "wpa-mixed")) {
+            strcpy(*uci_val, "wpa-wpa2");
+        }
     }
 }
 
@@ -361,7 +387,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
                 snprintf(ucipath, MAX_UCI_PATH, table_interface[i].ucipath, key2);
             }
         }
-        mem = transform_sysrepo_value(new_val);
+        mem = transform_sysrepo_value(ucipath, new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if (mem)
@@ -374,7 +400,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
                 snprintf(ucipath, MAX_UCI_PATH, table_wireless[i].ucipath, key1);
             }
         }
-        mem = transform_sysrepo_value(new_val);
+        mem = transform_sysrepo_value(ucipath, new_val);
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);

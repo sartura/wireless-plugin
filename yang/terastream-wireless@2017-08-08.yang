@@ -22,6 +22,40 @@ module terastream-wireless {
             "Version 0.1.0 -- Initial version.";
     }
 
+    typedef encryption-type {
+        type enumeration {
+            enum "none";      // None
+            enum "wep-open";  // WEP
+            enum "psk2";      // WPA2 Personal (PSK)
+            enum "psk-psk2";  // WPA/WPA2 Personal (PSK) Mixed Mode
+            enum "wpa2";      // WPA2 Enterprise
+            enum "wpa-wpa2";  // WPA/WPA2 Enterprise Mixed Mode
+        }
+    }
+
+    typedef channel-type {
+        type enumeration {
+            enum "auto";
+            enum "1";
+            enum "2";
+            enum "3";
+            enum "4";
+            enum "5";
+            enum "6";
+            enum "7";
+            enum "8";
+            enum "9";
+            enum "10";
+            enum "11";
+            enum "12";
+            enum "13";
+            enum "36";
+            enum "40";
+            enum "44";
+            enum "48";
+        }
+    }
+
     container "apsteering" {
       description
         "apsteering.";
@@ -140,26 +174,7 @@ module terastream-wireless {
         }
 
         leaf channel {
-             type enumeration {
-                 enum "auto";
-                 enum "1";
-                 enum "2";
-                 enum "3";
-                 enum "4";
-                 enum "5";
-                 enum "6";
-                 enum "7";
-                 enum "8";
-                 enum "9";
-                 enum "10";
-                 enum "11";
-                 enum "12";
-                 enum "13";
-                 enum "36";
-                 enum "40";
-                 enum "44";
-                 enum "48";
-             }
+             type channel-type;
              default "auto";
         }
 
@@ -322,19 +337,17 @@ module terastream-wireless {
             leaf encryption {
                  description
                   "Wireless encryption method";
-                 type enumeration {
-                     enum "none";      // None
-                     enum "wep-open";  // WEP
-                     enum "psk2";      // WPA2 Personal (PSK)
-                     enum "mixed-psk"; // WPA/WPA2 Personal (PSK) Mixed Mode
-                     enum "wpa2";      // WPA2 Enterprise
-                     enum "wpa-mixed"; // WPA/WPA2 Enterprise Mixed Mode
-                 }
+                 type encryption-type;
                  default "none";
             }
 
+            /* combination of encryption = psk2 and cipher = tkip+ccmp is not allowed
+               which is not covered by the cipher's when statement
+             */
+            must "encryption != 'psk2' or (encryption = 'psk2' and cipher != 'tkip+ccmp')";
+
             leaf cipher {
-                 when "../encryption = 'psk2' or ../encryption = 'mixed-psk'";
+                 when "../encryption = 'psk2' or ../encryption = 'psk-psk2'";
                  type enumeration {
                      enum "auto";      // Auto
                      enum "ccmp";      // CCMP (AES)
@@ -387,19 +400,19 @@ module terastream-wireless {
             }
 
             leaf radius_server {
-                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-wpa2'";
                  type string;
             }
 
             leaf radius_port {
-                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-wpa2'";
                  type uint16 {
                      range "1 .. 65535";
                  }
             }
 
             leaf radius_secret {
-                 when "../encryption = 'wpa2' or ../encryption = 'wpa-mixed'";
+                 when "../encryption = 'wpa2' or ../encryption = 'wpa-wpa2'";
                  type int32;
             }
 
@@ -480,7 +493,7 @@ module terastream-wireless {
         }
 
         leaf channel {
-          type string;
+          type channel-type;
         }
 
         leaf ssid {
@@ -488,7 +501,7 @@ module terastream-wireless {
         }
 
         leaf encryption {
-          type string;
+          type encryption-type;
         }
 
         leaf up {
