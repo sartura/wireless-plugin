@@ -14,17 +14,6 @@ struct status_container {
 struct ubus_context *ctx;
 struct status_container *container_msg;
 
-static char *
-remove_quotes(const char *str)
-{
-  char *unquoted;
-  unquoted = (char *)str;
-  unquoted = unquoted + 1;
-  unquoted[strlen(unquoted) - 1] = '\0';
-
-  return unquoted;
-}
-
 int
 operational_start()
 {
@@ -129,7 +118,7 @@ operstatus_channel_f(json_object *base, char *interface_name, struct list_head *
     sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
-    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
+    sr_val_set_str_data(list_value->value, SR_ENUM_T, ubus_result);
 
     list_add(&list_value->head, list);
 }
@@ -159,15 +148,29 @@ operstatus_encryption_f(json_object *base, char *interface_name, struct list_hea
     json_object_object_get_ex(base,
                               "encryption",
                               &t);
-    ubus_result = json_object_to_json_string(t);
+    ubus_result = json_object_get_string(t);
     if (!ubus_result) return;
+
+    /* transform ubus_result to acceptable YANG format */
+    if (0 == strcmp(ubus_result, "Disabled")) {
+        ubus_result = "none";
+    } else if (0 == strcmp(ubus_result, "WEP")) {
+        ubus_result = "wep-open";
+    } else if (0 == strcmp(ubus_result, "WPA2 PSK")) {
+        ubus_result = "psk2";
+    } else if (0 == strcmp(ubus_result, "WPA\\/WPA2 PSK")) {
+        ubus_result = "psk-psk2";
+    } else if (0 == strcmp(ubus_result, "WPA2 802.1x")) {
+        ubus_result = "wpa2";
+    } else if (0 == strcmp(ubus_result, "WPA\\/WPA2 802.1x")) {
+        ubus_result = "wpa-wpa2";
+    }
 
     list_value = calloc(1, sizeof *list_value);
     sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
-    sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
-
+    sr_val_set_str_data(list_value->value, SR_ENUM_T, ubus_result);
 
     list_add(&list_value->head, list);
 }
@@ -197,14 +200,14 @@ operstatus_ssid_f(json_object *base, char *interface_name, struct list_head *lis
     json_object_object_get_ex(base,
                               "ssid",
                               &t);
-    ubus_result = json_object_to_json_string(t);
+    ubus_result = json_object_get_string(t);
     if (!ubus_result) return;
 
     list_value = calloc(1, sizeof *list_value);
     sr_new_values(1, &list_value->value);
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
-    sr_val_set_str_data(list_value->value, SR_STRING_T, remove_quotes(ubus_result));
+    sr_val_set_str_data(list_value->value, SR_STRING_T, ubus_result);
 
     list_add(&list_value->head, list);
 }
@@ -243,7 +246,6 @@ operstatus_up_f(json_object *base, char *interface_name, struct list_head *list)
     sprintf(xpath, fmt, interface_name);
     sr_val_set_xpath(list_value->value, xpath);
     bool up = strcmp("true", ubus_result) == 0 ? true : false;
-    INF("%d: %s", up, up ? "true" : "false");
     list_value->value->type = SR_BOOL_T;
     list_value->value->data.bool_val = up;
 

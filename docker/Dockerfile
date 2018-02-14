@@ -187,5 +187,8 @@ RUN chmod +x /etc/init.d/network
 COPY router.wireless /usr/libexec/rpcd/router.wireless
 RUN chmod +x /usr/libexec/rpcd/router.wireless
 
+COPY network.device /usr/libexec/rpcd/network.device
+RUN chmod +x /usr/libexec/rpcd/network.device
+
 COPY supervisord.conf /etc/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

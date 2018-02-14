@@ -49,10 +49,24 @@ module terastream-wireless {
             enum "11";
             enum "12";
             enum "13";
+            enum "14";
+            enum "15";
             enum "36";
             enum "40";
             enum "44";
             enum "48";
+            enum "52";
+            enum "56";
+            enum "60";
+            enum "64";
+            enum "100";
+            enum "104";
+            enum "108";
+            enum "112";
+            enum "116";
+            enum "132";
+            enum "136";
+            enum "140";
         }
     }
 
@@ -496,7 +510,7 @@ module terastream-wireless {
         }
 
         leaf channel {
-          type string;
+          type channel-type;
         }
 
         leaf ssid {
@@ -504,13 +518,13 @@ module terastream-wireless {
         }
 
         leaf encryption {
-          type string;
+          type encryption-type;
         }
 
         leaf up {
           type boolean;
           description
-            "Is interface active or not.";
+            "Is the interface active or not.";
         }
       }
     }
