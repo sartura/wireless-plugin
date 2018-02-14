@@ -146,6 +146,12 @@ transform_sysrepo_value(char *ucipath, sr_val_t *value)
             } else if (0 == strcmp(value->data.string_val, "wpa-wpa2")) {
                 result = strdup("wpa-mixed");
             }
+        } else if (strstr(ucipath, "band")) {
+            if (0 == strcmp(value->data.string_val, "5")) {
+                result = strdup("a");
+            } else if (0 == strcmp(value->data.string_val, "2.4")) {
+                result = strdup("b");
+            }
         } else {
             result = sr_val_to_str(value);
         }
@@ -166,12 +172,16 @@ transform_default_value(sr_uci_link *map, char **uci_val)
      * wpa-mixed to wpa-wpa2
      * */
     if (strstr(map->ucipath, "encryption")) {
-        INF_MSG("IN encryption\n\n");
         if (0 == strcmp(*uci_val, "mixed-psk")) {
-         INF_MSG("IN MIXED\n\n");
             strcpy(*uci_val, "psk-psk2");
         } else if (0 == strcmp(*uci_val, "wpa-mixed")) {
             strcpy(*uci_val, "wpa-wpa2");
+        }
+    } else if (strstr(map->ucipath, "band")) {
+        if (0 == strcmp(*uci_val, "a")) {
+            strcpy(*uci_val, "5");
+        } else if (0 == strcmp(*uci_val, "b")) {
+            strcpy(*uci_val, "2.4");
         }
     }
 }
@@ -418,10 +428,10 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         rc = set_uci_item(uctx, ucipath, mem);
         UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if(mem) free(mem);
-	}
+    }
 
-	if (key1) free(key1);
-	if (key2) free(key2);
+    if (key1) free(key1);
+    if (key2) free(key2);
 
     return rc;
   uci_error:
@@ -494,7 +504,7 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     if (SR_EV_APPLY == event) {
         rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
         INF("\n\n ========== CONFIG HAS CHANGED: %s ==========\n\n", module_name);
-		return rc;
+        return rc;
     }
 
     snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name);

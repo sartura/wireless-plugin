@@ -160,10 +160,11 @@ module terastream-wireless {
 
         leaf band {
              type enumeration {
-                 enum "a";
-                 enum "b";
+                 enum "5";
+                 enum "2.4";
              }
-             default "b";
+             units GHz;
+             default "2.4";
         }
 
         leaf bandwidth {
