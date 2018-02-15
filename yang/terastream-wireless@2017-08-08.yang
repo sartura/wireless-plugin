@@ -172,7 +172,7 @@ module terastream-wireless {
              default "EU/13";
         }
 
-        leaf band {
+        leaf frequencyband {
              type enumeration {
                  enum "5";
                  enum "2.4";

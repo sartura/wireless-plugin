@@ -27,7 +27,7 @@ static sr_uci_link table_wireless[] = {
     /* wireless */
     { 0, SR_STRING_T, "wireless.%s.type", "/terastream-wireless:devices/device[name='%s']/type"},
     { "EU/13", SR_STRING_T, "wireless.%s.country", "/terastream-wireless:devices/device[name='%s']/country"},
-    { "b", SR_STRING_T, "wireless.%s.band", "/terastream-wireless:devices/device[name='%s']/band"},
+    { "b", SR_STRING_T, "wireless.%s.band", "/terastream-wireless:devices/device[name='%s']/frequencyband"},
     { "80", SR_UINT8_T, "wireless.%s.bandwidth", "/terastream-wireless:devices/device[name='%s']/bandwidth"},
     { "auto", SR_STRING_T, "wireless.%s.channel", "/terastream-wireless:devices/device[name='%s']/channel"},
     { "true", SR_BOOL_T, "wireless.%s.obss_coex", "/terastream-wireless:devices/device[name='%s']/obss_coex"},
