@@ -374,7 +374,7 @@ module terastream-wireless {
             }
 
             leaf key {
-                 when "../encryption = 'psk2'";
+                 when "../encryption = 'psk2' or ../encryption = 'psk-psk2'";
                  type string {
                      length "8 .. 63";
                  }
