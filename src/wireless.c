@@ -140,13 +140,13 @@ transform_sysrepo_value(char *ucipath, sr_val_t *value)
          * psk-psk2 to mixed-psk
          * wpa-wpa2 to wpa-mixed
          * */
-        if (strstr(ucipath, "encryption")) {
+        if (strlen(ucipath) > 11 && !strcmp(ucipath + strlen(ucipath) - 11, ".encryption")) {
             if (0 == strcmp(value->data.string_val, "psk-psk2")) {
                 result = strdup("mixed-psk");
             } else if (0 == strcmp(value->data.string_val, "wpa-wpa2")) {
                 result = strdup("wpa-mixed");
             }
-        } else if (strstr(ucipath, "band")) {
+        } else if (strlen(ucipath) > 5 && !strcmp(ucipath + strlen(ucipath) - 5, ".band")) {
             if (0 == strcmp(value->data.string_val, "5")) {
                 result = strdup("a");
             } else if (0 == strcmp(value->data.string_val, "2.4")) {
@@ -171,13 +171,13 @@ transform_default_value(sr_uci_link *map, char **uci_val)
      * mixed-psk to psk-psk2
      * wpa-mixed to wpa-wpa2
      * */
-    if (strstr(map->ucipath, "encryption")) {
+    if (strlen(map->ucipath) > 11 && !strcmp(map->ucipath + strlen(map->ucipath) - 11, ".encryption")) {
         if (0 == strcmp(*uci_val, "mixed-psk")) {
             strcpy(*uci_val, "psk-psk2");
         } else if (0 == strcmp(*uci_val, "wpa-mixed")) {
             strcpy(*uci_val, "wpa-wpa2");
         }
-    } else if (strstr(map->ucipath, "band")) {
+    } else if (strlen(map->ucipath) > 5 && !strcmp(map->ucipath + strlen(map->ucipath) - 5, ".band")) {
         if (0 == strcmp(*uci_val, "a")) {
             strcpy(*uci_val, "5");
         } else if (0 == strcmp(*uci_val, "b")) {
@@ -389,7 +389,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
     key1 = get_key_value(new_val->xpath, 0);
     key2 = get_key_value(new_val->xpath, 1);
 
-    if (strstr(new_val->xpath, "interface")) {
+    if (strstr(new_val->xpath, "/interface[")) {
         /* handle interface  */
         for (size_t i = 0; i < ARR_SIZE(table_interface); i++) {
             snprintf(xpath, XPATH_MAX_LEN, table_interface[i].xpath, key1, key2);
@@ -402,7 +402,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         UCI_CHECK_RET(rc, uci_error, "set_uci_item %s", sr_strerror(rc));
         if (mem)
             free(mem);
-    } else if (strstr(new_val->xpath, "device")) {
+    } else if (strstr(new_val->xpath, "/device[")) {
         /* handle device  */
         for (size_t i = 0; i < ARR_SIZE(table_wireless); i++) {
             snprintf(xpath, XPATH_MAX_LEN, table_wireless[i].xpath, key1);
@@ -416,7 +416,7 @@ sysrepo_to_uci(sr_session_ctx_t  *session, struct uci_context *uctx, sr_val_t *n
         if(mem) free(mem);
     }
 
-    if (strstr(new_val->xpath, "steering")) {
+    if (strstr(new_val->xpath, "steering/")) {
         /* handle device  */
         for (size_t i = 0; i < ARR_SIZE(steering); i++) {
             snprintf(xpath, XPATH_MAX_LEN, steering[i].xpath, key1);
