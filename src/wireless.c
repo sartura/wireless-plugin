@@ -455,8 +455,8 @@ ev_to_str(sr_notif_event_t ev) {
 static void
 restart_network_over_ubus(int wait_time)
 {
-    /*
     struct blob_buf buf = {0};
+    struct json_object *p;
     uint32_t id = 0;
     int u_rc = 0;
 
@@ -467,25 +467,39 @@ restart_network_over_ubus(int wait_time)
     }
 
     blob_buf_init(&buf, 0);
-    u_rc = ubus_lookup_id(u_ctx, "network", &id);
+    u_rc = ubus_lookup_id(u_ctx, "uci", &id);
     if (UBUS_STATUS_OK != u_rc) {
-        ERR("ubus [%d]: no object network\n", u_rc);
+        ERR("ubus [%d]: no object uci\n", u_rc);
         goto cleanup;
     }
 
-    u_rc = ubus_invoke(u_ctx, id, "restart", buf.head, NULL, NULL, wait_time * 1000);
+    p = json_object_new_object();
+    if (NULL == p) {
+      ERR_MSG("json_object_new_object() returned a NULL pointer");
+      goto cleanup;
+    }
+    json_object_object_add(p, "config", json_object_new_string("wireless"));
+    const char *json_data = json_object_get_string(p);
+    if (NULL == json_data) {
+      ERR_MSG("json_object_get_string() returned a NULL pointer");
+      goto cleanup;
+    }
+    blobmsg_add_json_from_string(&buf, json_data);
+
+    u_rc = ubus_invoke(u_ctx, id, "commit", buf.head, NULL, NULL, wait_time * 1000);
     if (UBUS_STATUS_OK != u_rc) {
-        ERR("ubus [%d]: no object restart\n", u_rc);
+        ERR("ubus [%d]: no object commit\n", u_rc);
         goto cleanup;
     }
 
 cleanup:
+    if (NULL != p) {
+        json_object_put(p);
+    }
     if (NULL != u_ctx) {
         ubus_free(u_ctx);
         blob_buf_free(&buf);
     }
-    */
-    system("/etc/init.d/network reload > /dev/null");
 }
 
 static int
@@ -500,12 +514,6 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
     char change_path[XPATH_MAX_LEN] = {0,};
 
     INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
-
-    if (SR_EV_APPLY == event) {
-        rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
-        INF("\n\n ========== CONFIG HAS CHANGED: %s ==========\n\n", module_name);
-        return rc;
-    }
 
     snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name);
 
@@ -529,6 +537,8 @@ wireless_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_
 
     if (SR_EV_APPLY == event) { 
       restart_network_over_ubus(2);
+      rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING, SR_DS_STARTUP);
+      return rc;
     }
 
   cleanup:
