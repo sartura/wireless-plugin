@@ -7,6 +7,7 @@
 #include "wireless.h"
 #include "operational.h"
 #include "common.h"
+#include "version.h"
 
 const char *YANG_MODEL = "terastream-wireless";
 
