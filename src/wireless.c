@@ -771,9 +771,12 @@ sr_dup_val_data(sr_val_t *dest, const sr_val_t *source)
     return rc;
 }
 
-
-    static int
+static int
+#ifdef SYSREPO_LESS_0_7_5
 wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
+#else
+wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, uint64_t request_id, void *private_ctx)
+#endif
 {
     char *node;
     struct plugin_ctx *pctx = (struct plugin_ctx *) private_ctx;
