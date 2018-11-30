@@ -775,7 +775,11 @@ static int
 #ifdef SYSREPO_LESS_0_7_5
 wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
 #else
+#ifdef SYSREPO_LESS_0_7_7
 wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, uint64_t request_id, void *private_ctx)
+#else
+wireless_operational_cb(const char *cb_xpath, sr_val_t **values, size_t *values_cnt, uint64_t request_id, const char *original_xpath, void *private_ctx)
+#endif
 #endif
 {
     char *node;
