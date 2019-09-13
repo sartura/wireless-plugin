@@ -45,7 +45,7 @@ static sr_uci_link table_wireless[] = {
     {"false", SR_BOOL_T, "wireless.%s.wmm_noack",
      "/terastream-wireless:devices/device[name='%s']/wmm_noack"},
     {"true", SR_BOOL_T, "wireless.%s.wmm_apsd",
-     "/terastream-wireless:devices/device[name='%s']/wmm_apsd"},
+     "/terastream-wireless:devices/device[name='%s']/type"},
     {"100", SR_INT32_T, "wireless.%s.txpower",
      "/terastream-wireless:devices/device[name='%s']/txpower"},
     {"default", SR_STRING_T, "wireless.%s.rateset",
@@ -105,12 +105,12 @@ static sr_uci_link table_interface[] = {
     {"none", SR_STRING_T, "wireless.%s.encryption",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "encryption"},
-    {"auto", SR_STRING_T, "wireless.%s.cipher",
+    {"none", SR_STRING_T, "wireless.%s.cipher",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "cipher"},
     {0, SR_STRING_T, "wireless.%s.key",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/key"},
-    {0, SR_UINT8_T, "wireless.%s.key_index",
+    {0, SR_INT32_T, "wireless.%s.key_index",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "key_index"},
     {0, SR_STRING_T, "wireless.%s.key1",
@@ -128,10 +128,10 @@ static sr_uci_link table_interface[] = {
     {0, SR_STRING_T, "wireless.%s.radius_server",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_server"},
-    {0, SR_UINT16_T, "wireless.%s.radius_port",
+    {0, SR_STRING_T, "wireless.%s.radius_port",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_port"},
-    {0, SR_INT32_T, "wireless.%s.radius_secret",
+    {0, SR_STRING_T, "wireless.%s.radius_secret",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_secret"},
     {"3600", SR_INT32_T, "wireless.%s.gtk_rekey",
@@ -158,7 +158,7 @@ static sr_uci_link table_interface[] = {
     {"true", SR_BOOL_T, "wireless.%s.disabled",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "enabled"},
-    {0, SR_INT32_T, "wireless.%s.macfilter",
+    {"0", SR_INT32_T, "wireless.%s.macfilter",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "macfilter"},
     {"false", SR_BOOL_T, "wireless.%s.hidden",
@@ -240,13 +240,6 @@ char *transform_sysrepo_value(char *ucipath, sr_val_t *value) {
       } else if (0 == strcmp(value->data.string_val, "2.4")) {
         result = strdup("b");
       }
-    } else if (strlen(ucipath) > 10 &&
-               !strcmp(ucipath + strlen(ucipath) - 10, ".macfilter")) {
-      if (value->data.int32_val == 0) {
-        result = strdup("disable");
-      } else if (value->data.int32_val == 1) {
-        result = strdup("allow");
-      }
     } else {
       result = sr_val_to_str(value);
     }
@@ -277,13 +270,6 @@ void transform_default_value(sr_uci_link *map, char **uci_val) {
       strcpy(*uci_val, "5");
     } else if (0 == strcmp(*uci_val, "b")) {
       strcpy(*uci_val, "2.4");
-    }
-  } else if (strlen(map->ucipath) > 10 &&
-             !strcmp(map->ucipath + strlen(map->ucipath) - 10, ".macfilter")) {
-    if (strcmp(*uci_val, "disable") == 0) {
-      strcpy(*uci_val, "0");
-    } else if (strcmp(*uci_val, "allow") == 0) {
-      strcpy(*uci_val, "1");
     }
   }
 }
@@ -534,12 +520,12 @@ uci_error:
 }
 
 /* Text representation of Sysrepo event code. */
-static const char *ev_to_str(sr_notif_event_t ev) {
+static const char *ev_to_str(sr_event_t ev) {
   switch (ev) {
-  case SR_EV_VERIFY:
-    return "verify";
-  case SR_EV_APPLY:
-    return "apply";
+  case SR_EV_CHANGE:
+    return "change";
+  case SR_EV_DONE:
+    return "done";
   case SR_EV_ABORT:
   default:
     return "abort";
@@ -596,9 +582,10 @@ cleanup:
 }
 
 static int wireless_change_cb(sr_session_ctx_t *session,
-                              const char *module_name, sr_notif_event_t event,
-                              void *private_ctx) {
-  struct plugin_ctx *pctx = (struct plugin_ctx *)private_ctx;
+                              const char *module_name, const char *xpath,
+                              sr_event_t event, uint32_t request_id,
+                              void *private_data) {
+  struct plugin_ctx *pctx = (struct plugin_ctx *)private_data;
   sr_change_iter_t *it = NULL;
   int rc = SR_ERR_OK;
   sr_change_oper_t oper;
@@ -628,20 +615,20 @@ static int wireless_change_cb(sr_session_ctx_t *session,
     sr_free_val(old_value);
     sr_free_val(new_value);
   }
-  rc = SR_ERR_OK;
   INF_MSG("\n\n ========== END OF CHANGES "
           "=======================================\n\n");
 
-  if (SR_EV_APPLY == event) {
+  if (SR_EV_DONE == event) {
     restart_network_over_ubus(2);
     rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING,
                         SR_DS_STARTUP);
+    return rc;
   }
 
 cleanup:
   sr_free_change_iter(it);
 
-  return rc;
+  return SR_ERR_OK;
 }
 
 static int init_sysrepo_data(struct plugin_ctx *pctx,
@@ -714,6 +701,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_default_value(&table_wireless[i], &uci_val);
         transform_bool_value(&table_wireless[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
+        INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
         rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
@@ -742,6 +730,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_default_value(&table_interface[i], &uci_val);
         transform_bool_value(&table_interface[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
+        INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
         rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
@@ -766,6 +755,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_default_value(&steering[i], &uci_val);
         transform_orig_bool_value(&steering[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
+        INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
         rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
@@ -777,8 +767,8 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
     device = NULL;
   }
 
-  rc = sr_commit(session);
-  SR_CHECK_RET(rc, exit, "Couldn't commit initial interfaces: %s",
+  rc = sr_apply_changes(session);
+  SR_CHECK_RET(rc, exit, "Couldn't apply changes initial interfaces: %s",
                sr_strerror(rc));
 
 exit:
@@ -863,7 +853,6 @@ int sr_dup_val_data(sr_val_t *dest, const sr_val_t *source) {
   case SR_UINT16_T:
   case SR_UINT32_T:
   case SR_UINT64_T:
-  case SR_TREE_ITERATOR_T:
     dest->data = source->data;
     dest->type = source->type;
     break;
@@ -876,27 +865,23 @@ int sr_dup_val_data(sr_val_t *dest, const sr_val_t *source) {
   return rc;
 }
 
-static int
-#if defined(SYSREPO_LESS_0_7_5)
-wireless_operational_cb(const char *cb_xpath, sr_val_t **values,
-                        size_t *values_cnt, void *private_ctx)
-#elif defined(SYSREPO_LESS_0_7_7)
-wireless_operational_cb(const char *cb_xpath, sr_val_t **values,
-                        size_t *values_cnt, uint64_t request_id,
-                        void *private_ctx)
-#else
-wireless_operational_cb(const char *cb_xpath, sr_val_t **values,
-                        size_t *values_cnt, uint64_t request_id,
-                        const char *original_xpath, void *private_ctx)
-#endif
-{
-  char *node;
-  struct plugin_ctx *pctx = (struct plugin_ctx *)private_ctx;
+static int wireless_operational_cb(sr_session_ctx_t *session,
+                                   const char *module_name, const char *path,
+                                   const char *request_xpath,
+                                   uint32_t request_id,
+                                   struct lyd_node **parent,
+                                   void *private_data) {
+  char *node = NULL;
+  struct plugin_ctx *pctx = (struct plugin_ctx *)private_data;
   (void)pctx;
   size_t n_mappings;
   int rc = SR_ERR_OK;
+  sr_val_t *values = NULL;
+  size_t values_cnt = 0;
+  char *value_string = NULL;
+  const struct ly_ctx *ly_ctx = NULL;
 
-  INF("%s", cb_xpath);
+  INF("%s", path);
   struct list_head list = LIST_HEAD_INIT(list);
   operational_start();
   oper_func func;
@@ -917,11 +902,11 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values,
 
   struct value_node *vn, *q;
   size_t j = 0;
-  rc = sr_new_values(cnt, values);
+  rc = sr_new_values(cnt, &values);
   SR_CHECK_RET(rc, exit, "Couldn't create values %s", sr_strerror(rc));
 
   list_for_each_entry_safe(vn, q, &list, head) {
-    rc = sr_dup_val_data(&(*values)[j], vn->value);
+    rc = sr_dup_val_data(&values[j], vn->value);
     SR_CHECK_RET(rc, exit, "Couldn't copy value: %s", sr_strerror(rc));
     sr_free_val(vn->value);
     list_del(&vn->head);
@@ -929,19 +914,39 @@ wireless_operational_cb(const char *cb_xpath, sr_val_t **values,
     j += 1;
   }
 
-  *values_cnt = cnt;
+  values_cnt = cnt;
 
   list_del(&list);
 
-  if (*values_cnt > 0) {
+  if (values_cnt > 0) {
     INF("[%d - %s]Debug sysrepo values printout: %zu", rc, sr_strerror(rc),
-        *values_cnt);
-    for (size_t i = 0; i < *values_cnt; i++) {
-      sr_print_val(&(*values)[i]);
+        values_cnt);
+    for (size_t i = 0; i < values_cnt; i++) {
+      sr_print_val(&values[i]);
     }
   }
 
+  if (*parent == NULL) {
+    ly_ctx = sr_get_context(sr_session_get_connection(session));
+    rc = SR_ERR_INTERNAL;
+    SR_CHECK_NULL_GOTO(ly_ctx, exit,
+                       "sr_get_context error: libyang context is NULL");
+    *parent = lyd_new_path(NULL, ly_ctx, request_xpath, NULL, 0, 0);
+  }
+
+  for (size_t i = 0; i < values_cnt; i++) {
+    value_string = sr_val_to_str(&values[i]);
+    lyd_new_path(*parent, NULL, values[i].xpath, value_string, 0, 0);
+    free(value_string);
+    value_string = NULL;
+  }
+
 exit:
+  if (values != NULL) {
+    sr_free_values(values, values_cnt);
+    values = NULL;
+    values_cnt = 0;
+  }
   return rc;
 }
 
@@ -976,31 +981,6 @@ exit:
   return rc;
 }
 
-void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx) {
-  INF("Plugin cleanup called, private_ctx is %s available.",
-      private_ctx ? "" : "not");
-  if (!private_ctx)
-    return;
-
-  struct plugin_ctx *ctx = private_ctx;
-  if (NULL != ctx->subscription) {
-    sr_unsubscribe(session, ctx->subscription);
-  }
-  if (NULL != ctx->startup_session) {
-    sr_session_stop(ctx->startup_session);
-  }
-  if (NULL != ctx->startup_connection) {
-    sr_disconnect(ctx->startup_connection);
-  }
-  if (NULL != ctx->uctx) {
-    uci_free_context(ctx->uctx);
-  }
-  operational_stop();
-  free(ctx);
-
-  SRP_LOG_DBG_MSG("Plugin cleaned-up successfully");
-}
-
 int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx) {
   int rc = SR_ERR_OK;
 
@@ -1026,42 +1006,81 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx) {
   }
 
   INF_MSG("Connecting to sysrepo ...");
-  rc = sr_connect(YANG_MODEL, SR_CONN_DEFAULT, &ctx->startup_connection);
+  rc = sr_connect(SR_CONN_DEFAULT, &ctx->startup_connection);
   SR_CHECK_RET(rc, error, "Error by sr_connect: %s", sr_strerror(rc));
 
-  rc = sr_session_start(ctx->startup_connection, SR_DS_STARTUP, SR_SESS_DEFAULT,
+  rc = sr_session_start(ctx->startup_connection, SR_DS_STARTUP,
                         &ctx->startup_session);
   SR_CHECK_RET(rc, error, "Error by sr_session_start: %s", sr_strerror(rc));
 
   rc = sync_datastores(ctx);
   SR_CHECK_RET(rc, error, "Couldn't initialize terastream-wireless: %s",
                sr_strerror(rc));
+
+  rc = sr_copy_config(ctx->startup_session, YANG_MODEL, SR_DS_STARTUP,
+                      SR_DS_RUNNING);
+  if (SR_ERR_OK != rc) {
+    WRN_MSG("Failed to copy running datastore to startup");
+    /* TODO handle this error */
+    goto error;
+  }
+
   /* Init wireless. */
 
   INF_MSG("sr_plugin_init_cb for wireless");
-  rc = sr_module_change_subscribe(session, YANG_MODEL, wireless_change_cb,
+  rc = sr_module_change_subscribe(session, YANG_MODEL, NULL, wireless_change_cb,
                                   *private_ctx, 0, SR_SUBSCR_DEFAULT,
                                   &ctx->subscription);
   SR_CHECK_RET(rc, error, "initialization error: %s", sr_strerror(rc));
 
   /* Operational data handling. */
   INF_MSG("Subscribing to operational");
-  rc = sr_dp_get_items_subscribe(session, "/terastream-wireless:devices-state",
-                                 wireless_operational_cb, *private_ctx,
-                                 SR_SUBSCR_CTX_REUSE, &ctx->subscription);
+  rc = sr_oper_get_items_subscribe(session, YANG_MODEL,
+                                   "/terastream-wireless:devices-state",
+                                   wireless_operational_cb, *private_ctx,
+                                   SR_SUBSCR_CTX_REUSE, &ctx->subscription);
   SR_CHECK_RET(rc, error, "Error by sr_dp_get_items_subscribe: %s",
                sr_strerror(rc));
 
-  SRP_LOG_DBG_MSG("Plugin initialized successfully");
+  DBG_MSG("Plugin initialized successfully");
   INF_MSG("sr_plugin_init_cb for sysrepo-plugin-dt-terastream finished.");
 
   return SR_ERR_OK;
 
 error:
   SRP_LOG_ERR("Plugin initialization failed: %s", sr_strerror(rc));
-  sr_plugin_cleanup_cb(session, *private_ctx);
-  *private_ctx = NULL;
+  sr_unsubscribe(ctx->subscription);
+  if (ctx->uctx) {
+    uci_free_context(ctx->uctx);
+    ctx->uctx = NULL;
+  }
+  // free(ctx);
   return rc;
+}
+
+void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx) {
+  INF("Plugin cleanup called, private_ctx is %s available.",
+      private_ctx ? "" : "not");
+  if (!private_ctx)
+    return;
+
+  struct plugin_ctx *ctx = private_ctx;
+  if (NULL != ctx->subscription) {
+    sr_unsubscribe(ctx->subscription);
+  }
+  if (NULL != ctx->startup_session) {
+    sr_session_stop(ctx->startup_session);
+  }
+  if (NULL != ctx->startup_connection) {
+    sr_disconnect(ctx->startup_connection);
+  }
+  if (NULL != ctx->uctx) {
+    uci_free_context(ctx->uctx);
+  }
+  operational_stop();
+  free(ctx);
+
+  DBG_MSG("Plugin cleaned-up successfully");
 }
 
 #ifndef PLUGIN
@@ -1082,14 +1101,16 @@ int main() {
   void *private_ctx = NULL;
   int rc = SR_ERR_OK;
 
+  ENABLE_LOGGING(SR_LL_DBG);
+
   /* connect to sysrepo */
   INF_MSG("Connecting to sysrepo ...");
-  rc = sr_connect(YANG_MODEL, SR_CONN_DEFAULT, &connection);
+  rc = sr_connect(SR_CONN_DEFAULT, &connection);
   SR_CHECK_RET(rc, cleanup, "Error by sr_connect: %s", sr_strerror(rc));
 
   /* start session */
   INF_MSG("Starting session ...");
-  rc = sr_session_start(connection, SR_DS_RUNNING, SR_SESS_DEFAULT, &session);
+  rc = sr_session_start(connection, SR_DS_RUNNING, &session);
   SR_CHECK_RET(rc, cleanup, "Error by sr_session_start: %s", sr_strerror(rc));
 
   INF_MSG("Initializing plugin ...");
@@ -1103,8 +1124,10 @@ int main() {
     sleep(1); /* or do some more useful work... */
   }
 
-  sr_plugin_cleanup_cb(session, private_ctx);
 cleanup:
+
+  sr_plugin_cleanup_cb(session, private_ctx);
+
   if (NULL != session) {
     sr_session_stop(session);
   }
