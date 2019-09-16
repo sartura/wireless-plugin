@@ -45,7 +45,7 @@ static sr_uci_link table_wireless[] = {
     {"false", SR_BOOL_T, "wireless.%s.wmm_noack",
      "/terastream-wireless:devices/device[name='%s']/wmm_noack"},
     {"true", SR_BOOL_T, "wireless.%s.wmm_apsd",
-     "/terastream-wireless:devices/device[name='%s']/type"},
+     "/terastream-wireless:devices/device[name='%s']/wmm_apsd"},
     {"100", SR_INT32_T, "wireless.%s.txpower",
      "/terastream-wireless:devices/device[name='%s']/txpower"},
     {"default", SR_STRING_T, "wireless.%s.rateset",
@@ -597,7 +597,7 @@ static int wireless_change_cb(sr_session_ctx_t *session,
 
   INF(">>>>>>>>> EVENT %s <<<<<<<<<", ev_to_str(event));
 
-  snprintf(change_path, XPATH_MAX_LEN, "/%s:*", module_name);
+  snprintf(change_path, XPATH_MAX_LEN, "/%s:*//.", module_name);
 
   rc = sr_get_changes_iter(session, change_path, &it);
   if (SR_ERR_OK != rc) {
@@ -615,6 +615,9 @@ static int wireless_change_cb(sr_session_ctx_t *session,
     sr_free_val(old_value);
     sr_free_val(new_value);
   }
+
+  rc = SR_ERR_OK;
+
   INF_MSG("\n\n ========== END OF CHANGES "
           "=======================================\n\n");
 
@@ -622,13 +625,12 @@ static int wireless_change_cb(sr_session_ctx_t *session,
     restart_network_over_ubus(2);
     rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING,
                         SR_DS_STARTUP);
-    return rc;
   }
 
 cleanup:
   sr_free_change_iter(it);
 
-  return SR_ERR_OK;
+  return rc;
 }
 
 static int init_sysrepo_data(struct plugin_ctx *pctx,
@@ -928,7 +930,6 @@ static int wireless_operational_cb(sr_session_ctx_t *session,
 
   if (*parent == NULL) {
     ly_ctx = sr_get_context(sr_session_get_connection(session));
-    rc = SR_ERR_INTERNAL;
     SR_CHECK_NULL_GOTO(ly_ctx, exit,
                        "sr_get_context error: libyang context is NULL");
     *parent = lyd_new_path(NULL, ly_ctx, request_xpath, NULL, 0, 0);
