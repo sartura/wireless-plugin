@@ -478,8 +478,8 @@ module terastream-wireless {
             }
 
             leaf macfilter {
-                 type int32;
-                 default 0;
+                 type string;
+                 default "disabled";
             }
 
             leaf hidden {
