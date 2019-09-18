@@ -158,7 +158,7 @@ static sr_uci_link table_interface[] = {
     {"true", SR_BOOL_T, "wireless.%s.disabled",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "enabled"},
-    {"0", SR_INT32_T, "wireless.%s.macfilter",
+    {"0", SR_STRING_T, "wireless.%s.macfilter",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "macfilter"},
     {"false", SR_BOOL_T, "wireless.%s.hidden",

@@ -45,6 +45,10 @@ config wifi-iface
 	option cipher 'auto'
 	option key 'SUBA6AXU3A7YKJ'
 	option gtk_rekey '3600'
+<<<<<<< HEAD
+=======
+	option macfilter 'disabled'
+>>>>>>> 992e45c... Fix bug in YANG module regardin macfilter
 	option wps_pbc '1'
 	option wmf_bss_enable '1'
 	option bss_max '32'
@@ -84,7 +88,11 @@ config wifi-iface
 	option cipher 'auto'
 	option key 'SUBA6AXU3A7YKJ'
 	option gtk_rekey '3600'
+<<<<<<< HEAD
 	option macfilter 'disable'
+=======
+	option macfilter 'disabled'
+>>>>>>> 992e45c... Fix bug in YANG module regardin macfilter
 	option wps_pbc '1'
 	option wmf_bss_enable '1'
 	option bss_max '32'
