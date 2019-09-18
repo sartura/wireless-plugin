@@ -201,7 +201,7 @@ RPC = """
                     <closed>true</closed>
                     <isolate>true</isolate>
                     <enabled>false</enabled>
-                    <macfilter>0</macfilter>
+                    <macfilter>disabled</macfilter>
                     <hidden>true</hidden>
                 </interface>
             </device>
@@ -253,7 +253,7 @@ RPC = """
                     <closed>true</closed>
                     <isolate>true</isolate>
                     <enabled>false</enabled>
-                    <macfilter>0</macfilter>
+                    <macfilter>disabled</macfilter>
                     <hidden>true</hidden>
                 </interface>
             </device>
@@ -273,7 +273,7 @@ RPC = """
 </get>
 """
 
-Reply = """<data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"><devices xmlns="http://terastrm.net/ns/yang/terastream-wireless"><device><name>wl0</name><type>false</type><country>EU/13</country><frequencyband>5</frequencyband><bandwidth>80</bandwidth><channel>auto</channel><obss_coex>false</obss_coex><scantimer>15</scantimer><wmm>false</wmm><wmm_noack>true</wmm_noack><txpower>100</txpower><rateset>default</rateset><frag>2346</frag><rts>2347</rts><dtim_period>1</dtim_period><beacon_int>100</beacon_int><rxchainps>true</rxchainps><rxchainps_qt>10</rxchainps_qt><rxchainps_pps>10</rxchainps_pps><rifs>true</rifs><rifs_advert>true</rifs_advert><maxassoc>32</maxassoc><dfsc>false</dfsc><hwmode>auto</hwmode><enabled>true</enabled><frameburst>true</frameburst><beamforming>false</beamforming><atf>true</atf><doth>1</doth><interface><name>cfg053579</name><device>wl0</device><ifname>wl0</ifname><network>lan</network><mode>ap</mode><ssid>PANTERA-7858</ssid><encryption>psk2</encryption><cipher>auto</cipher><key>SUBA6AXU3A7YKJ</key><gtk_rekey>3600</gtk_rekey><net_reauth>36000</net_reauth><wps_pbc>false</wps_pbc><wmf_bss_enable>false</wmf_bss_enable><bss_max>32</bss_max><closed>true</closed><isolate>true</isolate><enabled>false</enabled><macfilter>0</macfilter><hidden>true</hidden></interface></device><device><name>wl1</name><type>false</type><country>EU/13</country><frequencyband>2.4</frequencyband><bandwidth>20</bandwidth><channel>auto</channel><obss_coex>false</obss_coex><scantimer>15</scantimer><wmm>false</wmm><wmm_noack>true</wmm_noack><txpower>100</txpower><rateset>default</rateset><frag>2346</frag><rts>2347</rts><dtim_period>1</dtim_period><beacon_int>100</beacon_int><rxchainps>true</rxchainps><rxchainps_qt>10</rxchainps_qt><rxchainps_pps>10</rxchainps_pps><rifs>true</rifs><rifs_advert>true</rifs_advert><maxassoc>32</maxassoc><dfsc>false</dfsc><hwmode>auto</hwmode><enabled>true</enabled><frameburst>true</frameburst><beamforming>true</beamforming><atf>true</atf><doth>0</doth><interface><name>cfg083579</name><device>wl1</device><ifname>wl1</ifname><network>lan</network><mode>ap</mode><ssid>PANTERA-7858</ssid><encryption>psk2</encryption><cipher>auto</cipher><key>SUBA6AXU3A7YKJ</key><gtk_rekey>3600</gtk_rekey><net_reauth>36000</net_reauth><wps_pbc>false</wps_pbc><wmf_bss_enable>false</wmf_bss_enable><bss_max>32</bss_max><closed>true</closed><isolate>true</isolate><enabled>false</enabled><macfilter>0</macfilter><hidden>true</hidden></interface></device></devices></data>"""
+Reply = """<data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0"><devices xmlns="http://terastrm.net/ns/yang/terastream-wireless"><device><name>wl0</name><type>false</type><country>EU/13</country><frequencyband>5</frequencyband><bandwidth>80</bandwidth><channel>auto</channel><obss_coex>false</obss_coex><scantimer>15</scantimer><wmm>false</wmm><wmm_noack>true</wmm_noack><txpower>100</txpower><rateset>default</rateset><frag>2346</frag><rts>2347</rts><dtim_period>1</dtim_period><beacon_int>100</beacon_int><rxchainps>true</rxchainps><rxchainps_qt>10</rxchainps_qt><rxchainps_pps>10</rxchainps_pps><rifs>true</rifs><rifs_advert>true</rifs_advert><maxassoc>32</maxassoc><dfsc>false</dfsc><hwmode>auto</hwmode><enabled>true</enabled><frameburst>true</frameburst><beamforming>false</beamforming><atf>true</atf><doth>1</doth><interface><name>cfg053579</name><device>wl0</device><ifname>wl0</ifname><network>lan</network><mode>ap</mode><ssid>PANTERA-7858</ssid><encryption>psk2</encryption><cipher>auto</cipher><key>SUBA6AXU3A7YKJ</key><gtk_rekey>3600</gtk_rekey><net_reauth>36000</net_reauth><wps_pbc>false</wps_pbc><wmf_bss_enable>false</wmf_bss_enable><bss_max>32</bss_max><closed>true</closed><isolate>true</isolate><enabled>false</enabled><macfilter>disabled</macfilter><hidden>true</hidden></interface></device><device><name>wl1</name><type>false</type><country>EU/13</country><frequencyband>2.4</frequencyband><bandwidth>20</bandwidth><channel>auto</channel><obss_coex>false</obss_coex><scantimer>15</scantimer><wmm>false</wmm><wmm_noack>true</wmm_noack><txpower>100</txpower><rateset>default</rateset><frag>2346</frag><rts>2347</rts><dtim_period>1</dtim_period><beacon_int>100</beacon_int><rxchainps>true</rxchainps><rxchainps_qt>10</rxchainps_qt><rxchainps_pps>10</rxchainps_pps><rifs>true</rifs><rifs_advert>true</rifs_advert><maxassoc>32</maxassoc><dfsc>false</dfsc><hwmode>auto</hwmode><enabled>true</enabled><frameburst>true</frameburst><beamforming>true</beamforming><atf>true</atf><doth>0</doth><interface><name>cfg083579</name><device>wl1</device><ifname>wl1</ifname><network>lan</network><mode>ap</mode><ssid>PANTERA-7858</ssid><encryption>psk2</encryption><cipher>auto</cipher><key>SUBA6AXU3A7YKJ</key><gtk_rekey>3600</gtk_rekey><net_reauth>36000</net_reauth><wps_pbc>false</wps_pbc><wmf_bss_enable>false</wmf_bss_enable><bss_max>32</bss_max><closed>true</closed><isolate>true</isolate><enabled>false</enabled><macfilter>disabled</macfilter><hidden>true</hidden></interface></device></devices></data>"""
 
 [[unitTest.test]]
 
@@ -330,7 +330,7 @@ wireless.cfg053579.mode='ap'
 wireless.cfg053579.cipher='auto'
 wireless.cfg053579.key='SUBA6AXU3A7YKJ'
 wireless.cfg053579.gtk_rekey='3600'
-wireless.cfg053579.macfilter='0'
+wireless.cfg053579.macfilter='disabled'
 wireless.cfg053579.wps_pbc='1'
 wireless.cfg053579.wmf_bss_enable='1'
 wireless.cfg053579.bss_max='32'
@@ -400,7 +400,7 @@ wireless.cfg083579.ssid='PANTERA-7858'
 wireless.cfg083579.cipher='auto'
 wireless.cfg083579.key='SUBA6AXU3A7YKJ'
 wireless.cfg083579.gtk_rekey='3600'
-wireless.cfg083579.macfilter='0'
+wireless.cfg083579.macfilter='disabled'
 wireless.cfg083579.wps_pbc='1'
 wireless.cfg083579.wmf_bss_enable='1'
 wireless.cfg083579.bss_max='32'
