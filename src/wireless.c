@@ -30,7 +30,7 @@ static sr_uci_link table_wireless[] = {
      "/terastream-wireless:devices/device[name='%s']/type"},
     {"EU/13", SR_STRING_T, "wireless.%s.country",
      "/terastream-wireless:devices/device[name='%s']/country"},
-    {"b", SR_STRING_T, "wireless.%s.band",
+    {"2.4", SR_STRING_T, "wireless.%s.band",
      "/terastream-wireless:devices/device[name='%s']/frequencyband"},
     {"80", SR_UINT8_T, "wireless.%s.bandwidth",
      "/terastream-wireless:devices/device[name='%s']/bandwidth"},
@@ -45,7 +45,7 @@ static sr_uci_link table_wireless[] = {
     {"false", SR_BOOL_T, "wireless.%s.wmm_noack",
      "/terastream-wireless:devices/device[name='%s']/wmm_noack"},
     {"true", SR_BOOL_T, "wireless.%s.wmm_apsd",
-     "/terastream-wireless:devices/device[name='%s']/type"},
+     "/terastream-wireless:devices/device[name='%s']/wmm_apsd"},
     {"100", SR_INT32_T, "wireless.%s.txpower",
      "/terastream-wireless:devices/device[name='%s']/txpower"},
     {"default", SR_STRING_T, "wireless.%s.rateset",
@@ -105,12 +105,12 @@ static sr_uci_link table_interface[] = {
     {"none", SR_STRING_T, "wireless.%s.encryption",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "encryption"},
-    {"none", SR_STRING_T, "wireless.%s.cipher",
+    {"auto", SR_STRING_T, "wireless.%s.cipher",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "cipher"},
     {0, SR_STRING_T, "wireless.%s.key",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/key"},
-    {0, SR_INT32_T, "wireless.%s.key_index",
+    {0, SR_UINT8_T, "wireless.%s.key_index",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "key_index"},
     {0, SR_STRING_T, "wireless.%s.key1",
@@ -128,7 +128,7 @@ static sr_uci_link table_interface[] = {
     {0, SR_STRING_T, "wireless.%s.radius_server",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_server"},
-    {0, SR_STRING_T, "wireless.%s.radius_port",
+    {0, SR_UINT16_T, "wireless.%s.radius_port",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_port"},
     {0, SR_STRING_T, "wireless.%s.radius_secret",
@@ -639,6 +639,8 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
   char xpath[XPATH_MAX_LEN];
   char ucipath[MAX_UCI_PATH];
   int rc = SR_ERR_OK;
+  char *uci_val = NULL;
+  char *device = NULL;
 
   rc = uci_load(pctx->uctx, uci_package_name, &package);
   UCI_CHECK_RET(rc, exit, "[%d] Could not load package %s.", rc,
@@ -681,7 +683,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
 
     if (strcmp("wifi-device", type) == 0) {
       INF("uci name type %s %s", name, type);
-      char *uci_val = calloc(1, 100);
+      uci_val = calloc(1, 100);
       for (size_t i = 0; i < ARR_SIZE(table_wireless); i++) {
         snprintf(xpath, XPATH_MAX_LEN, table_wireless[i].xpath, name);
         snprintf(ucipath, MAX_UCI_PATH, table_wireless[i].ucipath, name);
@@ -702,10 +704,9 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
-      free(uci_val);
     } else if (strcmp("wifi-iface", type) == 0) {
-      char *uci_val = calloc(1, 100);
-      char *device = calloc(1, 100);
+      uci_val = calloc(1, 100);
+      device = calloc(1, 100);
       snprintf(ucipath, MAX_UCI_PATH, "wireless.%s.device", name);
       rc = get_uci_item(pctx->uctx, ucipath, &device);
       if (UCI_ERR_NOTFOUND == rc) {
@@ -731,12 +732,10 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
-      free(uci_val);
-      free(device);
     } else if (strcmp("bandsteering", type) == 0 ||
                strcmp("apsteering", type) == 0) {
-      char *uci_val = calloc(1, 100);
-      char *device = calloc(1, 100);
+      uci_val = calloc(1, 100);
+      device = calloc(1, 100);
       for (size_t i = 0; i < ARR_SIZE(steering); i++) {
         snprintf(xpath, XPATH_MAX_LEN, steering[i].xpath, device, name);
         snprintf(ucipath, MAX_UCI_PATH, steering[i].ucipath, name);
@@ -757,9 +756,11 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
-      free(uci_val);
-      free(device);
     }
+    free(uci_val);
+    uci_val = NULL;
+    free(device);
+    device = NULL;
   }
 
   rc = sr_commit(session);
@@ -767,6 +768,8 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
                sr_strerror(rc));
 
 exit:
+  free(uci_val);
+  free(device);
   if (package)
     uci_unload(pctx->uctx, package);
   return rc;
@@ -959,6 +962,31 @@ exit:
   return rc;
 }
 
+void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx) {
+  INF("Plugin cleanup called, private_ctx is %s available.",
+      private_ctx ? "" : "not");
+  if (!private_ctx)
+    return;
+
+  struct plugin_ctx *ctx = private_ctx;
+  if (NULL != ctx->subscription) {
+    sr_unsubscribe(session, ctx->subscription);
+  }
+  if (NULL != ctx->startup_session) {
+    sr_session_stop(ctx->startup_session);
+  }
+  if (NULL != ctx->startup_connection) {
+    sr_disconnect(ctx->startup_connection);
+  }
+  if (NULL != ctx->uctx) {
+    uci_free_context(ctx->uctx);
+  }
+  operational_stop();
+  free(ctx);
+
+  SRP_LOG_DBG_MSG("Plugin cleaned-up successfully");
+}
+
 int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx) {
   int rc = SR_ERR_OK;
 
@@ -1017,34 +1045,9 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx) {
 
 error:
   SRP_LOG_ERR("Plugin initialization failed: %s", sr_strerror(rc));
-  sr_unsubscribe(session, ctx->subscription);
-  free(ctx);
+  sr_plugin_cleanup_cb(session, *private_ctx);
+  *private_ctx = NULL;
   return rc;
-}
-
-void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx) {
-  INF("Plugin cleanup called, private_ctx is %s available.",
-      private_ctx ? "" : "not");
-  if (!private_ctx)
-    return;
-
-  struct plugin_ctx *ctx = private_ctx;
-  if (NULL != ctx->subscription) {
-    sr_unsubscribe(session, ctx->subscription);
-  }
-  if (NULL != ctx->startup_session) {
-    sr_session_stop(ctx->startup_session);
-  }
-  if (NULL != ctx->startup_connection) {
-    sr_disconnect(ctx->startup_connection);
-  }
-  if (NULL != ctx->uctx) {
-    uci_free_context(ctx->uctx);
-  }
-  operational_stop();
-  free(ctx);
-
-  SRP_LOG_DBG_MSG("Plugin cleaned-up successfully");
 }
 
 #ifndef PLUGIN
