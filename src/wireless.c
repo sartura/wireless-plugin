@@ -23,14 +23,13 @@ struct wireless_device {
   char *name;
   char *option;
 };
-
 static sr_uci_link table_wireless[] = {
     /* wireless */
     {0, SR_STRING_T, "wireless.%s.type",
      "/terastream-wireless:devices/device[name='%s']/type"},
     {"EU/13", SR_STRING_T, "wireless.%s.country",
      "/terastream-wireless:devices/device[name='%s']/country"},
-    {"b", SR_STRING_T, "wireless.%s.band",
+    {"2.4", SR_STRING_T, "wireless.%s.band",
      "/terastream-wireless:devices/device[name='%s']/frequencyband"},
     {"80", SR_UINT8_T, "wireless.%s.bandwidth",
      "/terastream-wireless:devices/device[name='%s']/bandwidth"},
@@ -105,12 +104,12 @@ static sr_uci_link table_interface[] = {
     {"none", SR_STRING_T, "wireless.%s.encryption",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "encryption"},
-    {"none", SR_STRING_T, "wireless.%s.cipher",
+    {"auto", SR_STRING_T, "wireless.%s.cipher",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "cipher"},
     {0, SR_STRING_T, "wireless.%s.key",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/key"},
-    {0, SR_INT32_T, "wireless.%s.key_index",
+    {0, SR_UINT8_T, "wireless.%s.key_index",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "key_index"},
     {0, SR_STRING_T, "wireless.%s.key1",
@@ -128,7 +127,7 @@ static sr_uci_link table_interface[] = {
     {0, SR_STRING_T, "wireless.%s.radius_server",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_server"},
-    {0, SR_STRING_T, "wireless.%s.radius_port",
+    {0, SR_UINT16_T, "wireless.%s.radius_port",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_port"},
     {0, SR_STRING_T, "wireless.%s.radius_secret",
@@ -158,7 +157,7 @@ static sr_uci_link table_interface[] = {
     {"true", SR_BOOL_T, "wireless.%s.disabled",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "enabled"},
-    {"0", SR_STRING_T, "wireless.%s.macfilter",
+    {"disabled", SR_STRING_T, "wireless.%s.macfilter",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "macfilter"},
     {"false", SR_BOOL_T, "wireless.%s.hidden",
