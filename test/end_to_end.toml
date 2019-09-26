@@ -330,11 +330,7 @@ wireless.cfg053579.mode='ap'
 wireless.cfg053579.cipher='auto'
 wireless.cfg053579.key='SUBA6AXU3A7YKJ'
 wireless.cfg053579.gtk_rekey='3600'
-<<<<<<< HEAD
-wireless.cfg053579.macfilter='disable'
-=======
 wireless.cfg053579.macfilter='disabled'
->>>>>>> 992e45c... Fix bug in YANG module regardin macfilter
 wireless.cfg053579.wps_pbc='1'
 wireless.cfg053579.wmf_bss_enable='1'
 wireless.cfg053579.bss_max='32'
@@ -404,11 +400,7 @@ wireless.cfg083579.ssid='PANTERA-7858'
 wireless.cfg083579.cipher='auto'
 wireless.cfg083579.key='SUBA6AXU3A7YKJ'
 wireless.cfg083579.gtk_rekey='3600'
-<<<<<<< HEAD
-wireless.cfg083579.macfilter='disable'
-=======
 wireless.cfg083579.macfilter='disabled'
->>>>>>> 992e45c... Fix bug in YANG module regardin macfilter
 wireless.cfg083579.wps_pbc='1'
 wireless.cfg083579.wmf_bss_enable='1'
 wireless.cfg083579.bss_max='32'
