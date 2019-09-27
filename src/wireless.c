@@ -30,7 +30,7 @@ static sr_uci_link table_wireless[] = {
      "/terastream-wireless:devices/device[name='%s']/type"},
     {"EU/13", SR_STRING_T, "wireless.%s.country",
      "/terastream-wireless:devices/device[name='%s']/country"},
-    {"2.4", SR_STRING_T, "wireless.%s.band",
+    {"b", SR_STRING_T, "wireless.%s.band",
      "/terastream-wireless:devices/device[name='%s']/frequencyband"},
     {"80", SR_UINT8_T, "wireless.%s.bandwidth",
      "/terastream-wireless:devices/device[name='%s']/bandwidth"},
@@ -131,7 +131,7 @@ static sr_uci_link table_interface[] = {
     {0, SR_UINT16_T, "wireless.%s.radius_port",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_port"},
-    {0, SR_STRING_T, "wireless.%s.radius_secret",
+    {0, SR_INT32_T, "wireless.%s.radius_secret",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "radius_secret"},
     {"3600", SR_INT32_T, "wireless.%s.gtk_rekey",
@@ -158,7 +158,7 @@ static sr_uci_link table_interface[] = {
     {"true", SR_BOOL_T, "wireless.%s.disabled",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "enabled"},
-    {"disable", SR_STRING_T, "wireless.%s.macfilter",
+    {0, SR_INT32_T, "wireless.%s.macfilter",
      "/terastream-wireless:devices/device[name='%s']/interface[name='%s']/"
      "macfilter"},
     {"false", SR_BOOL_T, "wireless.%s.hidden",
@@ -240,6 +240,13 @@ char *transform_sysrepo_value(char *ucipath, sr_val_t *value) {
       } else if (0 == strcmp(value->data.string_val, "2.4")) {
         result = strdup("b");
       }
+    } else if (strlen(ucipath) > 11 &&
+               !strcmp(ucipath + strlen(ucipath) - 11, ".macfilter")) {
+      if (value->data.int32_val == 0) {
+        result = strdup("disable");
+      } else if (value->data.int32_val == 1) {
+        result = strdup("allow");
+      }
     } else {
       result = sr_val_to_str(value);
     }
@@ -270,6 +277,13 @@ void transform_default_value(sr_uci_link *map, char **uci_val) {
       strcpy(*uci_val, "5");
     } else if (0 == strcmp(*uci_val, "b")) {
       strcpy(*uci_val, "2.4");
+    }
+  } else if (strlen(map->ucipath) > 11 &&
+             !strcmp(map->ucipath + strlen(map->ucipath) - 11, ".macfilter")) {
+    if (strcmp(*uci_val, "0") == 0) {
+      strcpy(*uci_val, "disable");
+    } else if (strcmp(*uci_val, "1") == 0) {
+      strcpy(*uci_val, "allow");
     }
   }
 }
@@ -614,6 +628,7 @@ static int wireless_change_cb(sr_session_ctx_t *session,
     sr_free_val(old_value);
     sr_free_val(new_value);
   }
+  rc = SR_ERR_OK;
   INF_MSG("\n\n ========== END OF CHANGES "
           "=======================================\n\n");
 
@@ -621,13 +636,12 @@ static int wireless_change_cb(sr_session_ctx_t *session,
     restart_network_over_ubus(2);
     rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING,
                         SR_DS_STARTUP);
-    return rc;
   }
 
 cleanup:
   sr_free_change_iter(it);
 
-  return SR_ERR_OK;
+  return rc;
 }
 
 static int init_sysrepo_data(struct plugin_ctx *pctx,
