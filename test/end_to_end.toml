@@ -201,7 +201,7 @@ RPC = """
                     <closed>true</closed>
                     <isolate>true</isolate>
                     <enabled>false</enabled>
-                    <macfilter>disabled</macfilter>
+                    <macfilter>0</macfilter>
                     <hidden>true</hidden>
                 </interface>
             </device>
@@ -253,7 +253,7 @@ RPC = """
                     <closed>true</closed>
                     <isolate>true</isolate>
                     <enabled>false</enabled>
-                    <macfilter>disabled</macfilter>
+                    <macfilter>0</macfilter>
                     <hidden>true</hidden>
                 </interface>
             </device>

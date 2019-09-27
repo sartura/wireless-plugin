@@ -430,7 +430,7 @@ module terastream-wireless {
 
             leaf radius_secret {
                  when "../encryption = 'wpa2' or ../encryption = 'wpa-wpa2'";
-                 type string;
+                 type int32;
             }
 
             leaf gtk_rekey {
@@ -478,8 +478,8 @@ module terastream-wireless {
             }
 
             leaf macfilter {
-                 type string;
-                 default "disable";
+                 type int32;
+                 default 0;
             }
 
             leaf hidden {
