@@ -240,8 +240,8 @@ char *transform_sysrepo_value(char *ucipath, sr_val_t *value) {
       } else if (0 == strcmp(value->data.string_val, "2.4")) {
         result = strdup("b");
       }
-    } else if (strlen(ucipath) > 11 &&
-               !strcmp(ucipath + strlen(ucipath) - 11, ".macfilter")) {
+    } else if (strlen(ucipath) > 10 &&
+               !strcmp(ucipath + strlen(ucipath) - 10, ".macfilter")) {
       if (value->data.int32_val == 0) {
         result = strdup("disable");
       } else if (value->data.int32_val == 1) {
@@ -278,12 +278,12 @@ void transform_default_value(sr_uci_link *map, char **uci_val) {
     } else if (0 == strcmp(*uci_val, "b")) {
       strcpy(*uci_val, "2.4");
     }
-  } else if (strlen(map->ucipath) > 11 &&
-             !strcmp(map->ucipath + strlen(map->ucipath) - 11, ".macfilter")) {
-    if (strcmp(*uci_val, "0") == 0) {
-      strcpy(*uci_val, "disable");
-    } else if (strcmp(*uci_val, "1") == 0) {
-      strcpy(*uci_val, "allow");
+  } else if (strlen(map->ucipath) > 10 &&
+             !strcmp(map->ucipath + strlen(map->ucipath) - 10, ".macfilter")) {
+    if (strcmp(*uci_val, "disable") == 0) {
+      strcpy(*uci_val, "0");
+    } else if (strcmp(*uci_val, "allow") == 0) {
+      strcpy(*uci_val, "1");
     }
   }
 }
