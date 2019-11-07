@@ -794,14 +794,14 @@ exit:
 }
 
 int sync_datastores(struct plugin_ctx *ctx) {
-  char datatstore_command[XPATH_MAX_LEN] = {0};
+  char datatstore_command[128] = {0};
   int rc = SR_ERR_OK;
   FILE *fp;
 
   /* check if the startup datastore is empty
    * by checking the output of sysrepocfg */
 
-  snprintf(datatstore_command, XPATH_MAX_LEN, "sysrepocfg -X -d startup -m %s", YANG_MODEL);
+  snprintf(datatstore_command, 128, "sysrepocfg -X -d startup -m %s", YANG_MODEL);
 
   fp = popen(datatstore_command, "r");
   if (NULL == fp) {
