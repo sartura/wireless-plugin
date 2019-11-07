@@ -716,7 +716,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_bool_value(&table_wireless[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
         INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
-        rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
+        rc = sr_set_item_str(session, xpath, uci_val, NULL, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
@@ -745,7 +745,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_bool_value(&table_interface[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
         INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
-        rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
+        rc = sr_set_item_str(session, xpath, uci_val, NULL, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
@@ -770,7 +770,7 @@ static int init_sysrepo_data(struct plugin_ctx *pctx,
         transform_orig_bool_value(&steering[i], &uci_val);
         SR_CHECK_RET(rc, exit, "uci getitem: %s %s", ucipath, sr_strerror(rc));
         INF("calling sr_set_item_str with parameters: %s = %s", xpath, uci_val);
-        rc = sr_set_item_str(session, xpath, uci_val, SR_EDIT_DEFAULT);
+        rc = sr_set_item_str(session, xpath, uci_val, NULL, SR_EDIT_DEFAULT);
         SR_CHECK_RET(rc, exit, "sr setitem: %s %s %s", sr_strerror(rc), xpath,
                      uci_val);
       }
