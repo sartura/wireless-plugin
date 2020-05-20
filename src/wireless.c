@@ -636,7 +636,7 @@ static int wireless_change_cb(sr_session_ctx_t *session,
   if (SR_EV_DONE == event) {
     restart_network_over_ubus(2);
     rc = sr_copy_config(pctx->startup_session, module_name, SR_DS_RUNNING,
-                        SR_DS_STARTUP, 0);
+                        0, 0);
   }
 
 cleanup:
@@ -790,7 +790,7 @@ exit:
   free(device);
   if (package)
     uci_unload(pctx->uctx, package);
-  return rc;  
+  return rc;
 }
 
 int sync_datastores(struct plugin_ctx *ctx) {
@@ -1031,8 +1031,8 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx) {
   SR_CHECK_RET(rc, error, "Couldn't initialize terastream-wireless: %s",
                sr_strerror(rc));
 
-  rc = sr_copy_config(ctx->startup_session, YANG_MODEL, SR_DS_STARTUP,
-                      SR_DS_RUNNING, 0);
+  rc = sr_copy_config(session, YANG_MODEL, SR_DS_STARTUP,
+                      0, 0);
   if (SR_ERR_OK != rc) {
     WRN_MSG("Failed to copy running datastore to startup");
     /* TODO handle this error */
