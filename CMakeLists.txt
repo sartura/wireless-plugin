@@ -10,7 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/)
 
 set(SOURCES
     src/wireless.c
-    src/operational.c
+    src/transform_data.c
+    src/utils/memory.c
 )
 
 # git SHA1 hash
