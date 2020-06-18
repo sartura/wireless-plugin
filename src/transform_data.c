@@ -63,3 +63,22 @@ char *transform_data_band_to_freqband_transform(const char *value, void *private
 		return NULL;
 	}
 }
+
+char *transform_data_encryption_ubus(const char *value)
+{
+	/* TODO: find out more of this mappings */
+	if (strcmp(value, "WPA2 PSK") == 0) {
+		return xstrdup("psk2");
+	} else {
+		return NULL;
+	}
+}
+
+char *transform_data_zero_one_to_boolean_ubus(const char *value)
+{
+	if (strcmp(value, "1") == 0) {
+		return xstrdup("true");
+	} else {
+		return xstrdup("false");
+	}
+}
