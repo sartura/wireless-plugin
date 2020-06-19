@@ -663,15 +663,15 @@ static void wireless_ubus_restart_network(int wait_time)
 		.lookup_path = "uci", .method = "commit", .transform_data_cb = NULL,
 		.timeout = (wait_time * 1000), .json_call_arguments = NULL
 	};
-	struct json_object *jobj;
+	struct json_object *json_obj;
 	int error = SRPO_UBUS_ERR_OK;
 
 	srpo_ubus_init_result_values(&values);
 
-	jobj = json_object_new_object();
-	json_object_object_add(jobj, "config", json_object_new_string("wireless"));
+	json_obj = json_object_new_object();
+	json_object_object_add(json_obj, "config", json_object_new_string("wireless"));
 
-	ubus_call_data.json_call_arguments = json_object_get_string(jobj);
+	ubus_call_data.json_call_arguments = json_object_get_string(json_obj);
 	if (!ubus_call_data.json_call_arguments)
 		goto cleanup;
 
@@ -682,7 +682,7 @@ static void wireless_ubus_restart_network(int wait_time)
 	}
 
 cleanup:
-	json_object_put(jobj);
+	json_object_put(json_obj);
 	srpo_ubus_free_result_values(values);
 	values = NULL;
 }
@@ -704,11 +704,11 @@ static int wireless_state_data_cb(sr_session_ctx_t *session, const char *module_
 	};
 
 	if (strcmp(path, WIRELESS_DEVICES_STATE_DATA_PATH) != 0 && strcmp(path, "*") != 0)
-		return error;
+		return SR_ERR_OK;
 
 	error = sr_get_items(session, "/" WIRELESS_YANG_MODEL ":devices/device/name", 0, SR_OPER_DEFAULT,
 			     &device_list, &device_list_size);
-	if (error) {
+	if (error != SR_ERR_OK) {
 		goto out;
 	}
 
@@ -739,6 +739,8 @@ static int wireless_state_data_cb(sr_session_ctx_t *session, const char *module_
 	}
 
 out:
+	sr_free_val(device_list);
+
 	if (values) {
 		srpo_ubus_free_result_values(values);
 	}
