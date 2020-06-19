@@ -693,14 +693,32 @@ static int wireless_state_data_cb(sr_session_ctx_t *session, const char *module_
 				  void *private_data)
 {
 	int error = SRPO_UBUS_ERR_OK;
+	sr_val_t *device_list = NULL;
+	size_t device_list_size = 0;
+	struct json_object *json_obj;
 	srpo_ubus_result_values_t *values = NULL;
 	srpo_ubus_call_data_t ubus_call_data = {
 		.lookup_path = "router.wireless", .method = "status",
-		.transform_data_cb = wireless_ubus, .timeout = 0, .json_call_arguments = NULL
+		.transform_data_cb = wireless_ubus, .timeout = 0,
+		.json_call_arguments = NULL
 	};
 
-	if (!strcmp(path, WIRELESS_DEVICES_STATE_DATA_PATH) || !strcmp(path, "*")) {
+	if (strcmp(path, WIRELESS_DEVICES_STATE_DATA_PATH) != 0 && strcmp(path, "*") != 0)
+		return error;
+
+	error = sr_get_items(session, "/" WIRELESS_YANG_MODEL ":devices/device/name", 0, SR_OPER_DEFAULT,
+			     &device_list, &device_list_size);
+	if (error) {
+		goto out;
+	}
+
+	for (size_t j = 0; j < device_list_size; j++) {
 		srpo_ubus_init_result_values(&values);
+
+		json_obj = json_object_new_object();
+		json_object_object_add(json_obj, "vif", json_object_new_string(device_list[j].data.string_val));
+
+		ubus_call_data.json_call_arguments = json_object_get_string(json_obj);
 
 		error = srpo_ubus_call(values, &ubus_call_data);
 		if (error != SRPO_UBUS_ERR_OK) {
@@ -715,6 +733,7 @@ static int wireless_state_data_cb(sr_session_ctx_t *session, const char *module_
 			goto out;
 		}
 
+		json_object_put(json_obj);
 		srpo_ubus_free_result_values(values);
 		values = NULL;
 	}
