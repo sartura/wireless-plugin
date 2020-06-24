@@ -739,7 +739,7 @@ static int wireless_state_data_cb(sr_session_ctx_t *session, const char *module_
 	}
 
 out:
-	sr_free_val(device_list);
+	sr_free_values(device_list, device_list_size);
 
 	if (values) {
 		srpo_ubus_free_result_values(values);
@@ -784,6 +784,8 @@ static void wireless_ubus(const char *ubus_json, srpo_ubus_result_values_t *valu
 		if (error != SRPO_UBUS_ERR_OK) {
 			goto cleanup;
 		}
+
+		FREE_SAFE(string);
 	}
 
 cleanup:
