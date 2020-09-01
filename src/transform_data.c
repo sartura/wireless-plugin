@@ -90,3 +90,19 @@ char *transform_data_zero_one_to_boolean_ubus(const char *value)
 
 	return xstrdup("false");
 }
+
+char *transform_data_state_to_integer_transform(const char *value, void *private_data)
+{
+	if (strcmp(value, "enabled") == 0)
+		return xstrdup("1");
+
+	return xstrdup("0");
+}
+
+char *transform_data_integer_to_state_transform(const char *value, void *private_data)
+{
+	if (strcmp(value, "1") == 0)
+		return xstrdup("enabled");
+
+	return xstrdup("disabled");
+}
